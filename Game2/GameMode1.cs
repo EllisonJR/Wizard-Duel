@@ -39,11 +39,6 @@ namespace WizardDuel
         }
         public void LoadContent()
         {
-            /*
-            border = content.Load<Texture2D>("sprites/border");
-            borderLocation = new Vector2(graphics.PreferredBackBufferWidth / 2 - border.Width / 2, graphics.PreferredBackBufferHeight / 2 - border.Bounds.Height / 2);
-            bounds = new Rectangle((int)borderLocation.X + 15, (int)borderLocation.Y + 15, border.Bounds.Width - 30, border.Bounds.Height - 30);
-            */
             foreach (Projectile projectile in projectiles)
             {
                 projectile.LoadContent();

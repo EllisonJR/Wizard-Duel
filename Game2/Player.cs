@@ -33,6 +33,8 @@ namespace WizardDuel
 
         Input input;
 
+        public int health { get; set; }
+
         public float shootingAngle { get; set; }
 
         public InputAction inputAction { get; set; }
@@ -43,8 +45,7 @@ namespace WizardDuel
             this.content = content;
             this.graphics = graphics;
             this.playerIndex = playerIndex;
-
-            
+            health = 3;
         }
         public void LoadContent()
         {
