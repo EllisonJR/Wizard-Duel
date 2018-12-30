@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -11,6 +12,7 @@ using Microsoft.Xna.Framework.Content;
 
 namespace WizardDuel
 {
+    public enum Collided { Left, Right, None, Top, Bottom}
     class Projectile
     {
         GraphicsDeviceManager graphics;
@@ -20,46 +22,43 @@ namespace WizardDuel
         Vector2 location;
         float angle;
         float speed;
+        public Rectangle bounds;
+        public Vector2 direction;
         public Texture2D fireball { get; set; }
 
-        public bool currentlyActive;
-        public bool previouslyActive;
+        public Collided collisionLocation;
+        public Collided previousCollision;
+        public bool collided;
 
         PlayerIndex playerIndex;
         InputAction inputAction;
 
         public Projectile(InputAction inputAction, float angle, Vector2 location, ContentManager content, GraphicsDeviceManager graphics, PlayerIndex playerIndex)
         {
-            LoadContent();
             this.content = content;
             this.graphics = graphics;
-            this.location = location;
-            this.angle = angle;
+            collisionLocation = Collided.None;
+            collided = false;
             this.inputAction = inputAction;
-            this.playerIndex = playerIndex;
-            if(this.inputAction == InputAction.Shoot)
+            if (this.inputAction == InputAction.Shoot)
             {
                 speed = 2;
-            }
-            if(this.inputAction == InputAction.ChargeShot)
-            {
-                speed = 4;
-            }
-        }
-        public void LoadContent()
-        {
-            if(inputAction == InputAction.Shoot)
-            {
                 fireball = content.Load<Texture2D>("sprites/fireball");
             }
-            if(inputAction == InputAction.ChargeShot)
+            if (this.inputAction == InputAction.ChargeShot)
             {
+                speed = 4;
                 fireball = content.Load<Texture2D>("sprites/chargedfireball");
             }
+
+            this.location = location;
+            this.angle = angle;
+            this.playerIndex = playerIndex;
+
+            bounds = new Rectangle((int)this.location.X, (int)this.location.Y, (int)fireball.Width, (int)fireball.Height);
         }
         public void UnloadContent()
         {
-            content.Unload();
         }
         public void Draw(SpriteBatch spriteBatch)
         {
@@ -71,18 +70,112 @@ namespace WizardDuel
         }
         public void UpdateLocation()
         {
-            Vector2 direction;
+            previousCollision = collisionLocation;
             if (playerIndex == PlayerIndex.One)
             {
-                direction = new Vector2((float)Math.Cos(angle + (Math.PI / -2f)), (float)Math.Sin(angle + (Math.PI / -2f)));
-                direction.Normalize();
-                location += direction * speed;
+                if (collisionLocation == Collided.None)
+                {
+                    direction = new Vector2((float)Math.Cos(angle + (Math.PI / -2f)), (float)Math.Sin(angle + (Math.PI / -2f)));
+                    direction.Normalize();
+                    location += direction * speed;
+
+                    bounds.Location = new Point((int)location.X, (int)location.Y);
+                }
+                if(collisionLocation == Collided.Left)
+                {
+                    if (collided == false)
+                    {
+                        direction = new Vector2((float)Math.Cos(angle + (Math.PI / -2f)), (float)Math.Sin(angle + (Math.PI / -2f)));
+                        direction.Normalize();
+                        location.X -= direction.X * speed;
+                        location.Y += direction.Y * speed;
+
+                        bounds.Location = new Point((int)location.X, (int)location.Y);
+                    }
+                    else if(collided == true)
+                    {
+                        direction = new Vector2((float)Math.Cos(angle + (Math.PI / -2f)), (float)Math.Sin(angle + (Math.PI / -2f)));
+                        direction.Normalize();
+                        location.X += direction.X * speed;
+                        location.Y += direction.Y * speed;
+
+                        bounds.Location = new Point((int)location.X, (int)location.Y);
+                    }
+                }
+                if(collisionLocation == Collided.Right)
+                {
+                    if (collided == false)
+                    {
+                        direction = new Vector2((float)Math.Cos(angle + (Math.PI / -2f)), (float)Math.Sin(angle + (Math.PI / -2f)));
+                        direction.Normalize();
+                        location.X -= direction.X * speed;
+                        location.Y += direction.Y * speed;
+
+                        bounds.Location = new Point((int)location.X, (int)location.Y);
+                    }
+                    else if(collided == true)
+                    {
+                        direction = new Vector2((float)Math.Cos(angle + (Math.PI / -2f)), (float)Math.Sin(angle + (Math.PI / -2f)));
+                        direction.Normalize();
+                        location.X += direction.X * speed;
+                        location.Y += direction.Y * speed;
+
+                        bounds.Location = new Point((int)location.X, (int)location.Y);
+                    }
+                }
             }
             else if(playerIndex == PlayerIndex.Two)
             {
-                direction = new Vector2((float)Math.Cos(angle + (Math.PI / 2)), (float)Math.Sin(angle + (Math.PI / 2)));
-                direction.Normalize();
-                location += direction * speed;
+                if (collisionLocation == Collided.None)
+                {
+                    direction = new Vector2((float)Math.Cos(angle + (Math.PI / 2)), (float)Math.Sin(angle + (Math.PI / 2)));
+                    direction.Normalize();
+                    location += direction * speed;
+
+                    bounds.Location = new Point((int)location.X, (int)location.Y);
+                }
+                if (collisionLocation == Collided.Left)
+                {
+                    if (collided == false)
+                    {
+                        direction = new Vector2((float)Math.Cos(angle + (Math.PI / 2f)), (float)Math.Sin(angle + (Math.PI / 2f)));
+                        direction.Normalize();
+                        location.X -= direction.X * speed;
+                        location.Y += direction.Y * speed;
+
+                        bounds.Location = new Point((int)location.X, (int)location.Y);
+                    }
+                    else if (collided == true)
+                    {
+                        direction = new Vector2((float)Math.Cos(angle + (Math.PI / 2f)), (float)Math.Sin(angle + (Math.PI / 2f)));
+                        direction.Normalize();
+                        location.X += direction.X * speed;
+                        location.Y += direction.Y * speed;
+
+                        bounds.Location = new Point((int)location.X, (int)location.Y);
+                    }
+                }
+                if (collisionLocation == Collided.Right)
+                {
+                    if (collided == false)
+                    {
+                        direction = new Vector2((float)Math.Cos(angle + (Math.PI / 2f)), (float)Math.Sin(angle + (Math.PI / 2f)));
+                        direction.Normalize();
+                        location.X -= direction.X * speed;
+                        location.Y += direction.Y * speed;
+
+                        bounds.Location = new Point((int)location.X, (int)location.Y);
+                    }
+                    else if (collided == true)
+                    {
+                        direction = new Vector2((float)Math.Cos(angle + (Math.PI / 2f)), (float)Math.Sin(angle + (Math.PI / 2f)));
+                        direction.Normalize();
+                        location.X += direction.X * speed;
+                        location.Y += direction.Y * speed;
+
+                        bounds.Location = new Point((int)location.X, (int)location.Y);
+                    }
+                }
             }
         }
     }

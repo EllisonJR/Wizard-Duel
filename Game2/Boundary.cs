@@ -16,8 +16,9 @@ namespace WizardDuel
         GraphicsDeviceManager graphics;
         ContentManager content;
 
-        Texture2D border { get; set; }
+        Texture2D border;
         Vector2 borderLocation;
+        public Rectangle bounds { get; set; }
 
         public Boundary(ContentManager content, GraphicsDeviceManager graphics)
         {
@@ -28,19 +29,15 @@ namespace WizardDuel
         {
             border = content.Load<Texture2D>("sprites/border");
             borderLocation = new Vector2(graphics.PreferredBackBufferWidth / 2 - border.Width / 2, graphics.PreferredBackBufferHeight / 2 - border.Bounds.Height / 2);
-
+            bounds = new Rectangle((int)borderLocation.X + 15, (int)borderLocation.Y, border.Width - 30, border.Height);
         }
         public void UnloadContent()
         {
             content.Unload();
         }
-        public void Update(GameTime gameTime)
-        {
-
-        }
         public void Draw(SpriteBatch spriteBatch)
         {
-
+            spriteBatch.Draw(border, borderLocation, Color.White);
         }
     }
 }

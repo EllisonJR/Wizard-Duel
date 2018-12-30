@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -18,14 +19,7 @@ namespace WizardDuel
         ContentManager content;
         GraphicsDeviceManager graphics;
 
-        Texture2D border;
-        Rectangle bounds;
-        Vector2 borderLocation;
-
-        Player player1;
-        Player player2;
-
-        Projectile fireballs;
+        Boundary boundary;
 
         List<Projectile> projectiles = new List<Projectile>();
         List<Player> players = new List<Player>();
@@ -36,13 +30,11 @@ namespace WizardDuel
             this.graphics = graphics;
             players.Add(new Player(ControlType.GamePlay, PlayerIndex.One, content, graphics));
             players.Add(new Player(ControlType.GamePlay, PlayerIndex.Two, content, graphics));
+            boundary = new Boundary(content, graphics);
         }
         public void LoadContent()
         {
-            foreach (Projectile projectile in projectiles)
-            {
-                projectile.LoadContent();
-            }
+            boundary.Loadcontent();
             foreach (Player player in players)
             {
                 player.LoadContent();
@@ -51,9 +43,14 @@ namespace WizardDuel
         public void Unloadcontent()
         {
             content.Unload();
+            boundary.UnloadContent();
             foreach(Player player in players)
             {
                 player.UnloadContent();
+            }
+            foreach(Projectile projectile in projectiles)
+            {
+                projectile.UnloadContent();
             }
         }
         public void Update(GameTime gameTime)
@@ -65,16 +62,61 @@ namespace WizardDuel
                 {
                     projectiles.Add(new Projectile(player.inputAction, player.shootingAngle, player.projectileOrigin, content, graphics, player.playerIndex));
                 }
-                foreach(Projectile projectile in projectiles)
+                for (int i = 0; i < projectiles.Count; i++)
                 {
-                    if (player.inputAction == InputAction.Shoot || player.inputAction == InputAction.ChargeShot)
+                    projectiles[i].Update(gameTime);
+
+                    if (projectiles[i].bounds.Left <= boundary.bounds.Left)
                     {
-                        projectile.LoadContent();
+                        projectiles[i].collisionLocation = Collided.Left;
+                        if (projectiles[i].previousCollision == Collided.Right)
+                        {
+                            if (projectiles[i].collided == false)
+                            {
+                                projectiles[i].collided = true;
+                            }
+                            else if (projectiles[i].collided == true)
+                            {
+                                projectiles[i].collided = false;
+                            }
+                        }
                     }
-                    projectile.Update(gameTime);
+                    else if (projectiles[i].bounds.Right >= boundary.bounds.Right)
+                    {
+                        projectiles[i].collisionLocation = Collided.Right;
+                        if (projectiles[i].previousCollision == Collided.Left)
+                        {
+                            if (projectiles[i].collided == false)
+                            {
+                                projectiles[i].collided = true;
+                            }
+                            else if (projectiles[i].collided == true)
+                            {
+                                projectiles[i].collided = false;
+                            }
+                        }
+                    }
+                    else if (projectiles[i].bounds.Top <= boundary.bounds.Top)
+                    {
+                        projectiles[i].collisionLocation = Collided.Top;
+                    }
+                    else if(projectiles[i].bounds.Bottom >= boundary.bounds.Bottom)
+                    {
+                        projectiles[i].collisionLocation = Collided.Bottom;
+                    }
+
+                    if(projectiles[i].collisionLocation == Collided.Bottom)
+                    {
+                        player.score += 1;
+                        projectiles.RemoveAt(i);
+                    }
+                    else if(projectiles[i].collisionLocation == Collided.Top)
+                    {
+                        player.score += 1;
+                        projectiles.RemoveAt(i);
+                    }
                 }
             }
-            
         }
         public void Draw(SpriteBatch spriteBatch)
         {
@@ -86,6 +128,7 @@ namespace WizardDuel
                     projectile.Draw(spriteBatch);
                 }
             }
+            boundary.Draw(spriteBatch);
         }
     }
 }
