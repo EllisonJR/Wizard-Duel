@@ -20,9 +20,9 @@ namespace WizardDuel
         GraphicsDeviceManager graphics;
 
         Boundary boundary;
-
-        List<Projectile> projectiles = new List<Projectile>();
+        
         List<Player> players = new List<Player>();
+        List<Projectile> projectiles = new List<Projectile>();
 
         public GameMode1(GameStates currentGameState, ContentManager content, GraphicsDeviceManager graphics)
         {
@@ -48,73 +48,19 @@ namespace WizardDuel
             {
                 player.UnloadContent();
             }
-            foreach(Projectile projectile in projectiles)
-            {
-                projectile.UnloadContent();
-            }
         }
         public void Update(GameTime gameTime)
         {
-            foreach(Player player in players)
+            foreach (Player player in players)
             {
                 player.Update(gameTime);
-                if(player.inputAction == InputAction.Shoot || player.inputAction == InputAction.ChargeShot)
+                if (player.inputAction == InputAction.Shoot || player.inputAction == InputAction.ChargeShot)
                 {
-                    projectiles.Add(new Projectile(player.inputAction, player.shootingAngle, player.projectileOrigin, content, graphics, player.playerIndex));
+                    projectiles.Add(new Projectile(player.inputAction, player.shootingAngle, player.projectileOrigin, content, graphics, player.playerIndex, boundary.bounds));
                 }
-                for (int i = 0; i < projectiles.Count; i++)
+                foreach(Projectile projectile in projectiles)
                 {
-                    projectiles[i].Update(gameTime);
-
-                    if (projectiles[i].bounds.Left <= boundary.bounds.Left)
-                    {
-                        projectiles[i].collisionLocation = Collided.Left;
-                        if (projectiles[i].previousCollision == Collided.Right)
-                        {
-                            if (projectiles[i].collided == false)
-                            {
-                                projectiles[i].collided = true;
-                            }
-                            else if (projectiles[i].collided == true)
-                            {
-                                projectiles[i].collided = false;
-                            }
-                        }
-                    }
-                    else if (projectiles[i].bounds.Right >= boundary.bounds.Right)
-                    {
-                        projectiles[i].collisionLocation = Collided.Right;
-                        if (projectiles[i].previousCollision == Collided.Left)
-                        {
-                            if (projectiles[i].collided == false)
-                            {
-                                projectiles[i].collided = true;
-                            }
-                            else if (projectiles[i].collided == true)
-                            {
-                                projectiles[i].collided = false;
-                            }
-                        }
-                    }
-                    else if (projectiles[i].bounds.Top <= boundary.bounds.Top)
-                    {
-                        projectiles[i].collisionLocation = Collided.Top;
-                    }
-                    else if(projectiles[i].bounds.Bottom >= boundary.bounds.Bottom)
-                    {
-                        projectiles[i].collisionLocation = Collided.Bottom;
-                    }
-
-                    if(projectiles[i].collisionLocation == Collided.Bottom)
-                    {
-                        player.score += 1;
-                        projectiles.RemoveAt(i);
-                    }
-                    else if(projectiles[i].collisionLocation == Collided.Top)
-                    {
-                        player.score += 1;
-                        projectiles.RemoveAt(i);
-                    }
+                    projectile.Update(gameTime);
                 }
             }
         }
@@ -123,10 +69,10 @@ namespace WizardDuel
             foreach (Player player in players)
             {
                 player.Draw(spriteBatch);
-                foreach (Projectile projectile in projectiles)
-                {
-                    projectile.Draw(spriteBatch);
-                }
+            }
+            foreach(Projectile projectile in projectiles)
+            {
+                projectile.Draw(spriteBatch);
             }
             boundary.Draw(spriteBatch);
         }
