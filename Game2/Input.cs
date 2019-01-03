@@ -29,6 +29,7 @@ namespace WizardDuel
 
         int chargeTimer;
         int reflectTimer;
+        int reflected;
         int menuTimer;
         
         public Input(ControlType controlType, PlayerIndex playerIndex)
@@ -40,6 +41,8 @@ namespace WizardDuel
             newState = new GamePadState();
             leftJoyStick = new GamePadState();
             rightJoyStick = new GamePadState();
+            reflected = 201;
+            reflectTimer = 301;
         }
 
         public void Update(GameTime gameTime)
@@ -86,64 +89,73 @@ namespace WizardDuel
             }
             if (controlType == ControlType.GamePlay) 
             {
+                reflected += gameTime.ElapsedGameTime.Milliseconds;
                 reflectTimer += gameTime.ElapsedGameTime.Milliseconds;
-                
-                if(inputAction == InputAction.ChargeShot || inputAction == InputAction.Shoot)
-                {
-                    inputAction = InputAction.None;
-                    chargeTimer = 0;
-                    shootingAngle = 0;
-                }
-                else if (oldState.Triggers.Right == 1 && newState.Triggers.Right == 1 && chargeTimer <= 1000)
-                {
-                    chargeTimer += gameTime.ElapsedGameTime.Milliseconds;
-                    inputAction = InputAction.Charge;
-                    CalculateShootingAngle();
-                }
-                else if(oldState.Triggers.Right == 1 && newState.Triggers.Right == 1 && chargeTimer > 1000)
-                {
-                    inputAction = InputAction.ChargeShotReady;
-                    CalculateShootingAngle();
-                }
-                else if(oldState.Triggers.Right == 1 && newState.Triggers.Right < 1 && chargeTimer < 1000)
-                {
-                    inputAction = InputAction.Shoot;
-                }
-                else if(oldState.Triggers.Right == 1 && newState.Triggers.Right < 1 && chargeTimer > 1000)
-                {
-                    inputAction = InputAction.ChargeShot;
-                }
-                else if(oldState.Buttons.Y == ButtonState.Released && newState.Buttons.Y == ButtonState.Pressed)
-                {
-                    if (reflectTimer >= 150)
-                    {
-                        inputAction = InputAction.Reflect;
-                        reflectTimer = 0;
-                    }
-                    else
-                    {
 
-                    }
-                }
-                else if(newState.Buttons.A == ButtonState.Pressed && oldState.Buttons.A == ButtonState.Released && leftJoyStick.ThumbSticks.Left.X < -.3f)
+                if (reflected <= 200)
                 {
-                    inputAction = InputAction.DashLeft;
-                }
-                else if (leftJoyStick.ThumbSticks.Left.X < -.3f)
-                {
-                    inputAction = InputAction.Left;
-                }
-                else if (newState.Buttons.A == ButtonState.Pressed && oldState.Buttons.A == ButtonState.Released && leftJoyStick.ThumbSticks.Left.X >= .3f)
-                {
-                    inputAction = InputAction.DashRight;
-                }
-                else if (leftJoyStick.ThumbSticks.Left.X >= .3f)
-                {
-                    inputAction = InputAction.Right;
+                    inputAction = InputAction.Reflect;
                 }
                 else
                 {
-                    inputAction = InputAction.None;
+                    if (inputAction == InputAction.ChargeShot || inputAction == InputAction.Shoot)
+                    {
+                        inputAction = InputAction.None;
+                        chargeTimer = 0;
+                        shootingAngle = 0;
+                    }
+                    else if (oldState.Triggers.Right == 1 && newState.Triggers.Right == 1 && chargeTimer <= 1000)
+                    {
+                        chargeTimer += gameTime.ElapsedGameTime.Milliseconds;
+                        inputAction = InputAction.Charge;
+                        CalculateShootingAngle();
+                    }
+                    else if (oldState.Triggers.Right == 1 && newState.Triggers.Right == 1 && chargeTimer > 1000)
+                    {
+                        inputAction = InputAction.ChargeShotReady;
+                        CalculateShootingAngle();
+                    }
+                    else if (oldState.Triggers.Right == 1 && newState.Triggers.Right < 1 && chargeTimer < 1000)
+                    {
+                        inputAction = InputAction.Shoot;
+                    }
+                    else if (oldState.Triggers.Right == 1 && newState.Triggers.Right < 1 && chargeTimer > 1000)
+                    {
+                        inputAction = InputAction.ChargeShot;
+                    }
+                    else if (oldState.Buttons.Y == ButtonState.Released && newState.Buttons.Y == ButtonState.Pressed)
+                    {
+                        if (reflectTimer >= 300)
+                        {
+                            inputAction = InputAction.Reflect;
+                            reflectTimer = 0;
+                            reflected = 0;
+                        }
+                        else
+                        {
+
+                        }
+                    }
+                    else if (newState.Buttons.A == ButtonState.Pressed && oldState.Buttons.A == ButtonState.Released && leftJoyStick.ThumbSticks.Left.X < -.3f)
+                    {
+                        inputAction = InputAction.DashLeft;
+                    }
+                    else if (leftJoyStick.ThumbSticks.Left.X < -.3f)
+                    {
+                        inputAction = InputAction.Left;
+                    }
+                    else if (newState.Buttons.A == ButtonState.Pressed && oldState.Buttons.A == ButtonState.Released && leftJoyStick.ThumbSticks.Left.X >= .3f)
+                    {
+                        inputAction = InputAction.DashRight;
+                    }
+                    else if (leftJoyStick.ThumbSticks.Left.X >= .3f)
+                    {
+                        inputAction = InputAction.Right;
+                    }
+                    else
+                    {
+                        inputAction = InputAction.None;
+                    }
                 }
             }
         }

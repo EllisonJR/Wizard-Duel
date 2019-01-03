@@ -32,6 +32,8 @@ namespace WizardDuel
 
         Rectangle boundary;
 
+        public int recentlyReflected;
+
         PlayerIndex playerIndex;
         InputAction inputAction;
 
@@ -67,6 +69,7 @@ namespace WizardDuel
                 direction = new Vector2((float)Math.Cos(angle + (Math.PI / 2)), (float)Math.Sin(angle + (Math.PI / 2)));
             }
             direction.Normalize();
+            recentlyReflected = 0;
         }
         public void Draw(SpriteBatch spriteBatch)
         {
@@ -74,15 +77,12 @@ namespace WizardDuel
         }
         public void Update(GameTime gameTime)
         {
-            CollisionSwitch();
             UpdateLocation();
+            recentlyReflected += gameTime.ElapsedGameTime.Milliseconds;
+            CollisionSwitch();
         }
         public void UpdateLocation()
         {
-            if (bounds.Top <= boundary.Top || bounds.Bottom >= boundary.Bottom)
-            {
-                direction.Y = -direction.Y;
-            }
             if (bounds.Left <= boundary.Left || bounds.Right >= boundary.Right)
             {
                 direction.X = -direction.X;
@@ -94,22 +94,23 @@ namespace WizardDuel
         }
         public void CollisionSwitch()
         {
-            /*else if (bounds.Intersects(//add player 1 reflect rect))
-            {
-                
-            }
-            else if (bounds.Intersects(//add player 2 reflect rect))
-            {
-                
-            }*/
-            /*else if (bounds.Top <= boundary.Top)
+            collisionLocation = CollidedWith.None;
+            if (bounds.Top <= boundary.Top)
             {
                 collisionLocation = CollidedWith.TopGoal;
             }
-            else if (bounds.Bottom >= boundary.Bottom)
+            if (bounds.Bottom >= boundary.Bottom)
             {
                 collisionLocation = CollidedWith.BottomGoal;
-            }*/
+            }
+            if (bounds.Left <= boundary.Left)
+            {
+                collisionLocation = CollidedWith.Left;
+            }
+            if (bounds.Right >= boundary.Right)
+            {
+                collisionLocation = CollidedWith.Right;
+            }
         }
     }
 }

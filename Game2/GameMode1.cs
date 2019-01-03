@@ -58,10 +58,43 @@ namespace WizardDuel
                 {
                     projectiles.Add(new Projectile(player.inputAction, player.shootingAngle, player.projectileOrigin, content, graphics, player.playerIndex, boundary.bounds));
                 }
-                foreach(Projectile projectile in projectiles)
+                if (player.inputAction == InputAction.Reflect)
+                {
+                    foreach (Projectile projectile in projectiles)
+                    {
+                        if (projectile.bounds.Intersects(player.reflectHitBox))
+                        {
+                            if (projectile.recentlyReflected >= 50)
+                            {
+                                projectile.direction.Y = -projectile.direction.Y;
+                            }
+                            projectile.recentlyReflected = 0;
+                        }
+                    }
+                }
+                foreach (Projectile projectile in projectiles)
                 {
                     projectile.Update(gameTime);
+                    if (projectile.collisionLocation == CollidedWith.TopGoal || projectile.collisionLocation == CollidedWith.BottomGoal)
+                    {
+                        if (player.playerIndex == PlayerIndex.One)
+                        {
+                            player.score++;
+                        }
+                        if (player.playerIndex == PlayerIndex.Two)
+                        {
+                            player.score++;
+                        }
+                    }
                 }
+                for(int i = 0; i < projectiles.Count; i++)
+                {
+                    if(projectiles[i].collisionLocation == CollidedWith.TopGoal || projectiles[i]. collisionLocation == CollidedWith.BottomGoal)
+                    {
+                        projectiles.RemoveAt(i--);
+                    }
+                }
+                Debug.WriteLine(projectiles.Count);
             }
         }
         public void Draw(SpriteBatch spriteBatch)

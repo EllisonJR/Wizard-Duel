@@ -23,11 +23,13 @@ namespace WizardDuel
         Texture2D playerHP;
         Texture2D playerGoal;
         Rectangle hitBox;
+        public Rectangle reflectHitBox;
 
         Vector2 rotationOrigin;
         public Vector2 projectileOrigin { get; set; }
         public Vector2 playerLocation;
         Vector2 reticalLocation;
+        Vector2 reflectorLocation;
 
         Matrix shooterMatrix;
 
@@ -53,18 +55,24 @@ namespace WizardDuel
         {
             playerSprite = content.Load<Texture2D>("sprites/player");
             playerRetical = content.Load<Texture2D>("sprites/retical");
+            playerReflect = content.Load<Texture2D>("sprites/reflecter");
+
             if (playerIndex == PlayerIndex.One)
             {
                 playerLocation = new Vector2((graphics.PreferredBackBufferWidth / 2) - (playerSprite.Width / 2), graphics.PreferredBackBufferHeight - playerSprite.Height - 50);
                 reticalLocation = new Vector2((playerLocation.X + playerSprite.Width / 2), playerLocation.Y);
+                reflectorLocation = new Vector2(playerLocation.X - (playerSprite.Width / 2) - 5, playerLocation.Y - 10);
                 hitBox = new Rectangle((int)playerLocation.X, (int)playerLocation.Y, playerSprite.Width, playerSprite.Height);
             }
             else if (playerIndex == PlayerIndex.Two)
             {
                 playerLocation = new Vector2((graphics.PreferredBackBufferWidth / 2) - (playerSprite.Width / 2), +50);
                 reticalLocation = new Vector2(playerLocation.X + (playerSprite.Width / 2), playerLocation.Y + playerSprite.Height);
+                reflectorLocation = new Vector2(playerLocation.X - (playerSprite.Width / 2) - 5, playerLocation.Y + 5);
                 hitBox = new Rectangle((int)playerLocation.X, (int)playerLocation.Y, playerSprite.Width, playerSprite.Height);
             }
+
+            reflectHitBox = new Rectangle((int)reflectorLocation.X, (int)reflectorLocation.Y, playerReflect.Width, playerReflect.Height + 5);
         }
         public void UnloadContent()
         {
@@ -73,7 +81,9 @@ namespace WizardDuel
         public void Update(GameTime gameTime)
         {
             input.Update(gameTime);
+            
             this.inputAction = input.inputAction;
+            
             PlayerMovement();
             CalculateRotationOrigin();
             CalculateProjectileOriginAndDirection();
@@ -82,7 +92,23 @@ namespace WizardDuel
         public void Draw(SpriteBatch spriteBatch)
         {
             spriteBatch.Draw(playerSprite, playerLocation, Color.White);
-            spriteBatch.Draw(playerRetical, reticalLocation, null, Color.White, (float)input.ReturnAngle(), rotationOrigin, 1f, SpriteEffects.None, 1f);
+
+            if (input.inputAction == InputAction.Reflect)
+            {
+                spriteBatch.Draw(playerReflect, reflectHitBox, Color.White);
+            }
+            else
+            {
+
+            }
+            if(input.inputAction == InputAction.Charge || input.inputAction == InputAction.ChargeShotReady)
+            {
+                spriteBatch.Draw(playerRetical, reticalLocation, null, Color.White, (float)input.ReturnAngle(), rotationOrigin, 1f, SpriteEffects.None, 1f);
+            }
+            else
+            {
+
+            }
         }
         public void PlayerMovement()
         {
@@ -102,20 +128,14 @@ namespace WizardDuel
             {
                 playerLocation.X = 25;
             }
-            LockHitBoxAndRetical();
+            LockObjectstoPlayer();
         }
-        public void LockHitBoxAndRetical()
+        public void LockObjectstoPlayer()
         {
-            if (playerIndex == PlayerIndex.One)
-            {
-                reticalLocation.X = playerLocation.X + (playerSprite.Width / 2);
-                hitBox.X = (int)playerLocation.X;
-            }
-            else if (playerIndex == PlayerIndex.Two)
-            {
-                reticalLocation.X = playerLocation.X + (playerSprite.Width / 2);
-                hitBox.X = (int)playerLocation.X;
-            }
+            reticalLocation.X = playerLocation.X + (playerSprite.Width / 2);
+            hitBox.X = (int)playerLocation.X;
+            reflectorLocation.X = playerLocation.X - 5;
+            reflectHitBox.X = (int)playerLocation.X - 5;
         }
         public void CalculateProjectileOriginAndDirection()
         {
