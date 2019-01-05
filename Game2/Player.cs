@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -16,6 +17,8 @@ namespace WizardDuel
         ContentManager content;
         GraphicsDeviceManager graphics;
         public PlayerIndex playerIndex { get; }
+        
+        int playerSpeed;
 
         Texture2D playerSprite;
         Texture2D playerRetical;
@@ -50,6 +53,7 @@ namespace WizardDuel
             this.playerIndex = playerIndex;
             health = 3;
             score = 0;
+            playerSpeed = 5;
         }
         public void LoadContent()
         {
@@ -63,6 +67,7 @@ namespace WizardDuel
                 reticalLocation = new Vector2((playerLocation.X + playerSprite.Width / 2), playerLocation.Y);
                 reflectorLocation = new Vector2(playerLocation.X - (playerSprite.Width / 2) - 5, playerLocation.Y - 10);
                 hitBox = new Rectangle((int)playerLocation.X, (int)playerLocation.Y, playerSprite.Width, playerSprite.Height);
+                reflectHitBox = new Rectangle((int)reflectorLocation.X, (int)reflectorLocation.Y, playerReflect.Width, playerReflect.Height + 5);
             }
             else if (playerIndex == PlayerIndex.Two)
             {
@@ -70,9 +75,10 @@ namespace WizardDuel
                 reticalLocation = new Vector2(playerLocation.X + (playerSprite.Width / 2), playerLocation.Y + playerSprite.Height);
                 reflectorLocation = new Vector2(playerLocation.X - (playerSprite.Width / 2) - 5, playerLocation.Y + 5);
                 hitBox = new Rectangle((int)playerLocation.X, (int)playerLocation.Y, playerSprite.Width, playerSprite.Height);
+                reflectHitBox = new Rectangle((int)reflectorLocation.X, (int)reflectorLocation.Y + playerSprite.Height, playerReflect.Width, playerReflect.Height + 5);
             }
 
-            reflectHitBox = new Rectangle((int)reflectorLocation.X, (int)reflectorLocation.Y, playerReflect.Width, playerReflect.Height + 5);
+            
         }
         public void UnloadContent()
         {
@@ -82,12 +88,15 @@ namespace WizardDuel
         {
             input.Update(gameTime);
             
-            this.inputAction = input.inputAction;
-            
-            PlayerMovement();
+            inputAction = input.inputAction;
+            PlayerMovement(gameTime);
             CalculateRotationOrigin();
             CalculateProjectileOriginAndDirection();
             shootingAngle = input.ReturnAngle();
+            if (playerIndex == PlayerIndex.One)
+            {
+                Debug.WriteLine(playerSpeed);
+            }
         }
         public void Draw(SpriteBatch spriteBatch)
         {
@@ -110,15 +119,62 @@ namespace WizardDuel
 
             }
         }
-        public void PlayerMovement()
+        public void PlayerMovement(GameTime gameTime)
         {
+            if (input.inputAction == InputAction.DashLeft || input.inputAction == InputAction.DashRight)
+            {
+                if(input.inputAction == InputAction.DashLeft)
+                {
+                    if (input.dashed <= 100)
+                    {
+                        playerSpeed = 20;
+                    }
+                    if (input.dashed > 100 && input.dashed <= 150)
+                    {
+                        playerSpeed = 8;
+                    }
+                    if(input.dashed > 175 && input.dashed <= 200)
+                    {
+                        playerSpeed = 7;
+                    }
+                    if(input.dashed > 200)
+                    {
+                        playerSpeed = 5;
+                        inputAction = InputAction.None;
+                    }
+                    playerLocation.X -= playerSpeed;
+                }
+                if(input.inputAction == InputAction.DashRight)
+                {
+                    if (input.dashed <= 100)
+                    {
+                        playerSpeed = 20;
+                    }
+                    if (input.dashed > 100 && input.dashed <= 150)
+                    {
+                        playerSpeed = 8;
+                    }
+                    if (input.dashed > 250 && input.dashed <= 200)
+                    {
+                        playerSpeed = 7;
+                    }
+                    if (input.dashed > 200)
+                    {
+                        playerSpeed = 5;
+                        inputAction = InputAction.None;
+                    }
+                    playerLocation.X += playerSpeed;
+                }
+            }
             if (input.inputAction == InputAction.Left)
             {
-                playerLocation.X -= 5;
+                playerSpeed = 5;
+                playerLocation.X -= playerSpeed;
             }
             else if (input.inputAction == InputAction.Right)
             {
-                playerLocation.X += 5;
+                playerSpeed = 5;
+                playerLocation.X += playerSpeed;
             }
             if (playerLocation.X > graphics.PreferredBackBufferWidth - playerSprite.Width - 25)
             {

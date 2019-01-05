@@ -18,6 +18,13 @@ namespace WizardDuel
 
         ContentManager content;
         GraphicsDeviceManager graphics;
+        SpriteFont font;
+
+        int gameClock;
+        int clockCounter;
+        int startClock;
+        int countDuration;
+        double currentTime;
 
         Boundary boundary;
         
@@ -31,9 +38,15 @@ namespace WizardDuel
             players.Add(new Player(ControlType.GamePlay, PlayerIndex.One, content, graphics));
             players.Add(new Player(ControlType.GamePlay, PlayerIndex.Two, content, graphics));
             boundary = new Boundary(content, graphics);
+
+            gameClock = 30;
+            clockCounter = 0;
+            countDuration = 1;
+            currentTime = 0;
         }
         public void LoadContent()
         {
+            font = content.Load<SpriteFont>("fonts/gameclock");
             boundary.Loadcontent();
             foreach (Player player in players)
             {
@@ -51,6 +64,13 @@ namespace WizardDuel
         }
         public void Update(GameTime gameTime)
         {
+            currentTime += gameTime.ElapsedGameTime.TotalSeconds;
+            if(currentTime >= countDuration)
+            {
+                gameClock--;
+                currentTime -= countDuration;
+            }
+
             foreach (Player player in players)
             {
                 player.Update(gameTime);
@@ -94,11 +114,11 @@ namespace WizardDuel
                         projectiles.RemoveAt(i--);
                     }
                 }
-                Debug.WriteLine(projectiles.Count);
             }
         }
         public void Draw(SpriteBatch spriteBatch)
         {
+            spriteBatch.DrawString(font, ":"+gameClock, new Vector2((graphics.PreferredBackBufferWidth / 2), (graphics.PreferredBackBufferHeight / 2)), Color.White);
             foreach (Player player in players)
             {
                 player.Draw(spriteBatch);

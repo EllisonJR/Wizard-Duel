@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -31,6 +32,7 @@ namespace WizardDuel
         int reflectTimer;
         int reflected;
         int menuTimer;
+        public int dashed;
         
         public Input(ControlType controlType, PlayerIndex playerIndex)
         {
@@ -41,6 +43,7 @@ namespace WizardDuel
             newState = new GamePadState();
             leftJoyStick = new GamePadState();
             rightJoyStick = new GamePadState();
+            dashed = 301;
             reflected = 201;
             reflectTimer = 301;
         }
@@ -51,6 +54,7 @@ namespace WizardDuel
             newState = GamePad.GetState(playerIndex);
             leftJoyStick = GamePad.GetState(playerIndex);
             rightJoyStick = GamePad.GetState(playerIndex);
+            
             if(controlType == ControlType.Menu)
             {
                 menuTimer += gameTime.ElapsedGameTime.Milliseconds;
@@ -91,10 +95,46 @@ namespace WizardDuel
             {
                 reflected += gameTime.ElapsedGameTime.Milliseconds;
                 reflectTimer += gameTime.ElapsedGameTime.Milliseconds;
-
                 if (reflected <= 200)
                 {
                     inputAction = InputAction.Reflect;
+                }
+                else if(dashed <= 200)
+                {
+                    if(inputAction == InputAction.DashLeft)
+                    {
+                        dashed += gameTime.ElapsedGameTime.Milliseconds;
+                        if (dashed >= 200)
+                        {
+                            if (oldState.Buttons.Y == ButtonState.Pressed && newState.Buttons.Y == ButtonState.Pressed)
+                            {
+                                inputAction = InputAction.Reflect;
+                                reflectTimer = 0;
+                                reflected = 0;
+                            }
+                            else
+                            {
+                                inputAction = InputAction.None;
+                            }
+                        }
+                    }
+                    if(inputAction == InputAction.DashRight)
+                    {
+                        dashed += gameTime.ElapsedGameTime.Milliseconds;
+                        if (dashed >= 200)
+                        {
+                            if (oldState.Buttons.Y == ButtonState.Pressed && newState.Buttons.Y == ButtonState.Pressed)
+                            {
+                                inputAction = InputAction.Reflect;
+                                reflectTimer = 0;
+                                reflected = 0;
+                            }
+                            else
+                            {
+                                inputAction = InputAction.None;
+                            }
+                        }
+                    }
                 }
                 else
                 {
@@ -139,14 +179,16 @@ namespace WizardDuel
                     else if (newState.Buttons.A == ButtonState.Pressed && oldState.Buttons.A == ButtonState.Released && leftJoyStick.ThumbSticks.Left.X < -.3f)
                     {
                         inputAction = InputAction.DashLeft;
+                        dashed = 0;
                     }
                     else if (leftJoyStick.ThumbSticks.Left.X < -.3f)
                     {
                         inputAction = InputAction.Left;
                     }
-                    else if (newState.Buttons.A == ButtonState.Pressed && oldState.Buttons.A == ButtonState.Released && leftJoyStick.ThumbSticks.Left.X >= .3f)
+                    else if (newState.Buttons.A == ButtonState.Pressed && oldState.Buttons.A == ButtonState.Released && leftJoyStick.ThumbSticks.Left.X > .3f)
                     {
                         inputAction = InputAction.DashRight;
+                        dashed = 0;
                     }
                     else if (leftJoyStick.ThumbSticks.Left.X >= .3f)
                     {
