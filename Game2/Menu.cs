@@ -17,6 +17,8 @@ namespace WizardDuel
         GraphicsDeviceManager graphics;
         Input input;
 
+        SpriteFont font;
+
         public GameStates currentGamestate { get; set; }
 
         int menuPointer;
@@ -49,6 +51,7 @@ namespace WizardDuel
             play = content.Load<Texture2D>("sprites/playbutton");
             options = content.Load<Texture2D>("sprites/optionsbutton");
             exit = content.Load<Texture2D>("sprites/exitbutton");
+            font = content.Load<SpriteFont>("fonts/gameclock");
 
             playPlacement = new Vector2(CalculateTexturePlacement(indicator.Bounds.Width, indicator.Bounds.Height).X, CalculateTexturePlacement(indicator.Bounds.Width, indicator.Bounds.Height).Y);
             menuPlacement = new Vector2(CalculateTexturePlacement(indicator.Bounds.Width, indicator.Bounds.Height).X, CalculateTexturePlacement(indicator.Bounds.Width, indicator.Bounds.Height).Y + 50);
@@ -65,6 +68,7 @@ namespace WizardDuel
             spriteBatch.Draw(play, playPlacement, Color.White);
             spriteBatch.Draw(options, menuPlacement, Color.White);
             spriteBatch.Draw(exit, exitPlacement, Color.White);
+            spriteBatch.DrawString(font, "Ver 0.1.0", new Vector2(graphics.PreferredBackBufferWidth / 2 - 40, 550),Color.White);
             switch (menuPointer)
             {
                 case 0:

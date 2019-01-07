@@ -68,6 +68,18 @@
 /processorParam:TextureFormat=Color
 /build:sprites/chargedfireball.png
 
+#begin sprites/endgamebackground.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:sprites/endgamebackground.png
+
 #begin sprites/exitbutton.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -92,7 +104,7 @@
 /processorParam:TextureFormat=Color
 /build:sprites/fireball.png
 
-#begin sprites/health.png
+#begin sprites/healthbar.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -102,7 +114,19 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:sprites/health.png
+/build:sprites/healthbar.png
+
+#begin sprites/healthcontainer.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:sprites/healthcontainer.png
 
 #begin sprites/indicator.png
 /importer:TextureImporter

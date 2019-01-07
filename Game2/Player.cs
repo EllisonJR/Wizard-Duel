@@ -20,25 +20,32 @@ namespace WizardDuel
         
         int playerSpeed;
 
-        Texture2D playerSprite;
+        public Texture2D playerSprite;
         Texture2D playerRetical;
         Texture2D playerReflect;
-        Texture2D playerHP;
+        Texture2D playerHealthContainer;
+        Texture2D playerHealthBar;
         Texture2D playerGoal;
-        Rectangle hitBox;
+        public Rectangle hitBox;
         public Rectangle reflectHitBox;
+        Texture2D shotMeterTexture;
+        Rectangle shotMeter;
+        float shotMeterCounter;
+        Vector2 shotMeterLocation;
 
         Vector2 rotationOrigin;
         public Vector2 projectileOrigin { get; set; }
         public Vector2 playerLocation;
         Vector2 reticalLocation;
         Vector2 reflectorLocation;
+        Vector2 healthContainerLocation;
+        Vector2 healthBarLocation;
 
         Matrix shooterMatrix;
 
-        Input input;
+        public Input input;
 
-        public int health { get; set; }
+        public int health;
         public int score { get; set; }
 
         public float shootingAngle { get; set; }
@@ -60,6 +67,11 @@ namespace WizardDuel
             playerSprite = content.Load<Texture2D>("sprites/player");
             playerRetical = content.Load<Texture2D>("sprites/retical");
             playerReflect = content.Load<Texture2D>("sprites/reflecter");
+            playerHealthContainer = content.Load<Texture2D>("sprites/healthcontainer");
+            playerHealthBar = content.Load<Texture2D>("sprites/healthbar");
+            shotMeterTexture = content.Load<Texture2D>("sprites/player");
+
+            shotMeterCounter = shotMeterTexture.Width;
 
             if (playerIndex == PlayerIndex.One)
             {
@@ -68,6 +80,8 @@ namespace WizardDuel
                 reflectorLocation = new Vector2(playerLocation.X - (playerSprite.Width / 2) - 5, playerLocation.Y - 10);
                 hitBox = new Rectangle((int)playerLocation.X, (int)playerLocation.Y, playerSprite.Width, playerSprite.Height);
                 reflectHitBox = new Rectangle((int)reflectorLocation.X, (int)reflectorLocation.Y, playerReflect.Width, playerReflect.Height + 5);
+                healthContainerLocation = new Vector2(graphics.PreferredBackBufferWidth / 2 - (playerHealthContainer.Width / 2), graphics.PreferredBackBufferHeight - 42);
+                shotMeterLocation = new Vector2(playerLocation.X, playerLocation.Y + 2 + playerSprite.Height);
             }
             else if (playerIndex == PlayerIndex.Two)
             {
@@ -76,9 +90,10 @@ namespace WizardDuel
                 reflectorLocation = new Vector2(playerLocation.X - (playerSprite.Width / 2) - 5, playerLocation.Y + 5);
                 hitBox = new Rectangle((int)playerLocation.X, (int)playerLocation.Y, playerSprite.Width, playerSprite.Height);
                 reflectHitBox = new Rectangle((int)reflectorLocation.X, (int)reflectorLocation.Y + playerSprite.Height, playerReflect.Width, playerReflect.Height + 5);
+                healthContainerLocation = new Vector2(graphics.PreferredBackBufferWidth / 2 - (playerHealthContainer.Width / 2), 30);
+                shotMeterLocation = new Vector2(playerLocation.X, playerLocation.Y - 4);
             }
-
-            
+            healthBarLocation = new Vector2(healthContainerLocation.X + 3, healthContainerLocation.Y + 3);
         }
         public void UnloadContent()
         {
@@ -87,16 +102,12 @@ namespace WizardDuel
         public void Update(GameTime gameTime)
         {
             input.Update(gameTime);
-            
+            ShotMeter();
             inputAction = input.inputAction;
             PlayerMovement(gameTime);
             CalculateRotationOrigin();
             CalculateProjectileOriginAndDirection();
             shootingAngle = input.ReturnAngle();
-            if (playerIndex == PlayerIndex.One)
-            {
-                Debug.WriteLine(playerSpeed);
-            }
         }
         public void Draw(SpriteBatch spriteBatch)
         {
@@ -118,6 +129,27 @@ namespace WizardDuel
             {
 
             }
+            if(health == 3)
+            {
+                spriteBatch.Draw(playerHealthBar, healthBarLocation, Color.White);
+                spriteBatch.Draw(playerHealthBar, new Vector2(healthBarLocation.X + 1 + playerHealthBar.Width, healthBarLocation.Y), Color.White);
+                spriteBatch.Draw(playerHealthBar, new Vector2(healthBarLocation.X + 2 + playerHealthBar.Width * 2, healthBarLocation.Y), Color.White);
+            }
+            else if(health == 2)
+            {
+                spriteBatch.Draw(playerHealthBar, healthBarLocation, Color.White);
+                spriteBatch.Draw(playerHealthBar, new Vector2(healthBarLocation.X + 1 + playerHealthBar.Width, healthBarLocation.Y), Color.White);
+            }
+            else if(health == 1)
+            {
+                spriteBatch.Draw(playerHealthBar, healthBarLocation, Color.White);
+            }
+            else
+            {
+
+            }
+            spriteBatch.Draw(playerHealthContainer, healthContainerLocation, Color.White);
+            spriteBatch.Draw(shotMeterTexture, new Rectangle((int)shotMeterLocation.X, (int)shotMeterLocation.Y, (int)shotMeterCounter, 2), Color.White);
         }
         public void PlayerMovement(GameTime gameTime)
         {
@@ -192,6 +224,7 @@ namespace WizardDuel
             hitBox.X = (int)playerLocation.X;
             reflectorLocation.X = playerLocation.X - 5;
             reflectHitBox.X = (int)playerLocation.X - 5;
+            shotMeterLocation.X = (int)playerLocation.X;
         }
         public void CalculateProjectileOriginAndDirection()
         {
@@ -215,6 +248,42 @@ namespace WizardDuel
             else if(playerIndex == PlayerIndex.Two)
             {
                 rotationOrigin = new Vector2(playerRetical.Width / 2, 0);
+            }
+        }
+        public void ShotMeter()
+        {
+            if (shotMeterCounter < playerSprite.Width)
+            {
+                shotMeterCounter += .2f;
+            }
+            if (input.inputAction == InputAction.Charge || input.inputAction == InputAction.ChargeShotReady)
+            {
+                if(shotMeterCounter < 10)
+                {
+                    input.inputAction = InputAction.None;
+                }
+            }
+            if(input.inputAction == InputAction.Shoot)
+            {
+                if (shotMeterCounter < 10)
+                {
+                    input.inputAction = InputAction.None;
+                }
+                else
+                {
+                    shotMeterCounter -= 10;
+                }
+            }
+            if(input.inputAction == InputAction.ChargeShot)
+            {
+                if (shotMeterCounter < 20)
+                {
+                    input.inputAction = InputAction.None;
+                }
+                else
+                {
+                    shotMeterCounter -= 20;
+                }
             }
         }
     }

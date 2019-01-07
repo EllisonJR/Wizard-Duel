@@ -58,8 +58,17 @@ namespace WizardDuel
             this.angle = angle;
             this.playerIndex = playerIndex;
 
+            if(location.X + fireball.Width > boundary.Right)
+            {
+                this.location.X = boundary.Right - fireball.Width;
+            }
+            else if(location.X < boundary.Left)
+            {
+                this.location.X = boundary.Left;
+            }
             bounds = new Rectangle((int)this.location.X, (int)this.location.Y, (int)fireball.Width, (int)fireball.Height);
             this.boundary = boundary;
+
             if (playerIndex == PlayerIndex.One)
             {
                 direction = new Vector2((float)Math.Cos(angle + (Math.PI / -2f)), (float)Math.Sin(angle + (Math.PI / -2f)));

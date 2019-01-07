@@ -9,7 +9,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-public enum InputAction { Left, Right, Up, Down, Shoot, Charge, ChargeShotReady, ChargeShot, Reflect, DashLeft, DashRight, Confirm, Back, None};
+public enum InputAction { LeftMenu, RightMenu, Left, Right, Up, Down, Shoot, Charge, ChargeShotReady, ChargeShot, Reflect, DashLeft, DashRight, Confirm, Back, None};
 public enum ControlType { Menu, GamePlay};
 
 namespace WizardDuel
@@ -17,7 +17,7 @@ namespace WizardDuel
     class Input
     {
         public InputAction inputAction { get; set; }
-        ControlType controlType;
+        public ControlType controlType;
         PlayerIndex playerIndex;
 
         GamePadState oldState;
@@ -68,12 +68,12 @@ namespace WizardDuel
                 }
                 else if(leftJoyStick.ThumbSticks.Left.X < -.5 & menuTimer > 250)
                 {
-                    inputAction = InputAction.Left;
+                    inputAction = InputAction.LeftMenu;
                     menuTimer = 0;
                 }
                 else if(leftJoyStick.ThumbSticks.Left.X > .5 && menuTimer > 250)
                 {
-                    inputAction = InputAction.Right;
+                    inputAction = InputAction.RightMenu;
                     menuTimer = 0;
                 }
                 else if(leftJoyStick.ThumbSticks.Left.Y > .5 & menuTimer > 250)

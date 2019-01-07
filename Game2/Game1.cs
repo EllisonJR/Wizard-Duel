@@ -101,6 +101,10 @@ namespace WizardDuel
                     break;
                 case GameStates.Menu:
                     menu.Update(gameTime);
+                    if (gameMode1.active == false)
+                    {
+                        gameMode1.Reset();
+                    }
                     currentGameState = menu.currentGamestate;
                     break;
                 case GameStates.Options:
