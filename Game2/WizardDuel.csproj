@@ -75,6 +75,7 @@
   <ItemGroup>
     <Compile Include="Boundary.cs" />
     <Compile Include="Game1.cs" />
+    <Compile Include="GameClock.cs" />
     <Compile Include="GameMode1.cs" />
     <Compile Include="Input.cs" />
     <Compile Include="Menu.cs" />
