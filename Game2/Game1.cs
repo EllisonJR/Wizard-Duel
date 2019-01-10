@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 public enum GameStates { Menu, Options, GameMode1, Exit, Paused}
 
@@ -98,6 +99,7 @@ namespace WizardDuel
                 case GameStates.GameMode1:
                     gameMode1.Update(gameTime);
                     currentGameState = gameMode1.currentGameState;
+                    gameMode1.currentGameState = currentGameState;
                     break;
                 case GameStates.Menu:
                     menu.Update(gameTime);
