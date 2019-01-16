@@ -8,20 +8,25 @@ using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Content;
 
 namespace WizardDuel
 {
     class GameClock
     {
         GameStates gameState;
+        GraphicsDeviceManager graphics;
+        SpriteFont font;
 
         public int gameClock { get; set; }
         public int startClock { get; set; }
         double currentTime;
-        public float millisecondTimer { get; set; }
 
-        public GameClock()
+        public GameClock(GraphicsDeviceManager graphics, ContentManager content)
         {
+            this.graphics = graphics;
+            font = content.Load<SpriteFont>("fonts/gameclock");
+
             gameClock = 60;
             startClock = 3;
             currentTime = 1f;
@@ -43,20 +48,12 @@ namespace WizardDuel
                         gameClock--;
                         currentTime = 1;
                     }
-                    else
+                    else if(gameClock == 0)
                     {
 
                     }
                 }
             }
-        }
-        public void MillisecondTimer(GameTime gameTime)
-        {
-            millisecondTimer += gameTime.ElapsedGameTime.Milliseconds;
-        }
-        public void ResetMillisecondTimer()
-        {
-            millisecondTimer = 0;
         }
         public void ResetClock(GameStates currentGameState)
         {
@@ -64,6 +61,32 @@ namespace WizardDuel
             {
                 gameClock = 60;
                 startClock = 3;
+            }
+        }
+        public void Draw(SpriteBatch spriteBatch)
+        {
+            if (gameClock < 10)
+            {
+                spriteBatch.DrawString(font, "00:0" + gameClock, new Vector2(graphics.PreferredBackBufferWidth - 90, (graphics.PreferredBackBufferHeight / 2)), Color.White);
+            }
+            else
+            {
+                spriteBatch.DrawString(font, "00:" + gameClock, new Vector2(graphics.PreferredBackBufferWidth - 90, (graphics.PreferredBackBufferHeight / 2)), Color.White);
+            }
+            if (startClock > -1)
+            {
+                if (startClock == 0)
+                {
+                    spriteBatch.DrawString(font, "Go!", new Vector2(graphics.PreferredBackBufferWidth / 2 - 10, graphics.PreferredBackBufferHeight / 2), Color.White);
+                }
+                else if (startClock > 0)
+                {
+                    spriteBatch.DrawString(font, "" + startClock, new Vector2(graphics.PreferredBackBufferWidth / 2 - 10, graphics.PreferredBackBufferHeight / 2), Color.White);
+                }
+                else
+                {
+
+                }
             }
         }
     }

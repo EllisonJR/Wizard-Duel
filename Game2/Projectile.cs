@@ -58,6 +58,16 @@ namespace WizardDuel
             this.angle = angle;
             this.playerIndex = playerIndex;
 
+            if(playerIndex == PlayerIndex.One)
+            {
+                this.location.Y -= fireball.Height;
+                this.location.X -= fireball.Width / 2;
+            }
+            else if(playerIndex == PlayerIndex.Two)
+            {
+                this.location.X -= fireball.Width / 2;
+            }
+
             if(location.X + fireball.Width > boundary.Right)
             {
                 this.location.X = boundary.Right - fireball.Width;

@@ -21,31 +21,29 @@ namespace WizardDuel
         SpriteFont font;
         Texture2D endGameScreen;
 
-        string winnerText= "";
-
         public bool active = false;
 
         Boundary boundary;
 
         GameClock gameClock;
-        
-        List<Player> players = new List<Player>();
-        List<Projectile> projectiles = new List<Projectile>();
+        GameLoopLogic gameLoopLogic;
 
         public GameMode1(GameStates currentGameState, ContentManager content, GraphicsDeviceManager graphics)
         {
             this.content = content;
             this.graphics = graphics;
             this.currentGameState = currentGameState;
-            players.Add(new Player(ControlType.GamePlay, PlayerIndex.One, content, graphics));
-            players.Add(new Player(ControlType.GamePlay, PlayerIndex.Two, content, graphics));
             boundary = new Boundary(content, graphics);
-            gameClock = new GameClock();
+            gameLoopLogic = new GameLoopLogic(content, graphics, boundary);
+
+            gameLoopLogic.players.Add(new Player(ControlType.GamePlay, PlayerIndex.One, content, graphics));
+            gameLoopLogic.players.Add(new Player(ControlType.GamePlay, PlayerIndex.Two, content, graphics));
+            gameClock = new GameClock(graphics, content);
             active = true;
         }
         public void Reset()
         {
-            foreach(Player player in players)
+            foreach(Player player in gameLoopLogic.players)
             {
                 player.health = 3;
                 player.score = 0;
@@ -57,14 +55,14 @@ namespace WizardDuel
 
             active = true;
 
-            projectiles.Clear();
+            gameLoopLogic.projectiles.Clear();
         }
         public void LoadContent()
         {
             font = content.Load<SpriteFont>("fonts/gameclock");
             endGameScreen = content.Load<Texture2D>("sprites/endgamebackground");
             boundary.Loadcontent();
-            foreach (Player player in players)
+            foreach (Player player in gameLoopLogic.players)
             {
                 player.LoadContent();
             }
@@ -73,174 +71,65 @@ namespace WizardDuel
         {
             content.Unload();
             boundary.UnloadContent();
-            foreach(Player player in players)
+            foreach(Player player in gameLoopLogic.players)
             {
                 player.UnloadContent();
             }
         }
         public void Update(GameTime gameTime)
         {
-            gameClock.GameMode1Clock(gameTime);
+            
             if (gameClock.startClock > -1)
             {
-                
+                gameClock.GameMode1Clock(gameTime);
             }
             else
             {
                 if (gameClock.gameClock ==  0)
                 {
-                    TimeUpConditions(gameTime);
+                    gameLoopLogic.TimeUpConditions(gameTime);
+                    foreach (Player player in gameLoopLogic.players)
+                    {
+                        player.Update(gameTime);
+                        player.input.controlType = ControlType.Menu;
+                        if (player.inputAction == InputAction.Confirm)
+                        {
+                            currentGameState = GameStates.Menu;
+                        }
+                    }
+                    active = false;
                 }
-                else if(players[0].health == 0 || players[1].health == 0)
+                else if(gameLoopLogic.players[0].health == 0 || gameLoopLogic.players[1].health == 0)
                 {
-                    PlayerDeathConditions(gameTime);
+                    gameLoopLogic.PlayerDeathConditions(gameTime);
+                    foreach (Player player in gameLoopLogic.players)
+                    {
+                        player.Update(gameTime);
+                        player.input.controlType = ControlType.Menu;
+                        if (player.inputAction == InputAction.Confirm)
+                        {
+                            currentGameState = GameStates.Menu;
+                        }
+                    }
+                    active = false;
                 }
                 else
                 {
-                    GameLoopLogic(gameTime);
+                    gameClock.GameMode1Clock(gameTime);
+                    gameLoopLogic.ListChecks(gameTime);
                 }
             }
         }
         public void Draw(SpriteBatch spriteBatch)
         {
-            if (gameClock.gameClock < 10)
-            {
-                spriteBatch.DrawString(font, "00:0" + gameClock.gameClock, new Vector2(boundary.bounds.Right - 60, (graphics.PreferredBackBufferHeight / 2)), Color.White);
-            }
-            else
-            {
-                spriteBatch.DrawString(font, "00:" + gameClock.gameClock, new Vector2(boundary.bounds.Right - 60, (graphics.PreferredBackBufferHeight / 2)), Color.White);
-            }
-            foreach (Player player in players)
-            {
-                player.Draw(spriteBatch);
-            }
-            foreach(Projectile projectile in projectiles)
-            {
-                projectile.Draw(spriteBatch);
-            }
+            gameLoopLogic.DrawLists(spriteBatch);
+            gameClock.Draw(spriteBatch);
             boundary.Draw(spriteBatch);
-            if(gameClock.startClock > -1)
-            {
-                if(gameClock.startClock == 0)
-                {
-                    spriteBatch.DrawString(font, "Go!", new Vector2(graphics.PreferredBackBufferWidth / 2 - 10, graphics.PreferredBackBufferHeight / 2), Color.White);
-                }
-                else if(gameClock.startClock > 0)
-                {
-                    spriteBatch.DrawString(font, "" + gameClock.startClock, new Vector2(graphics.PreferredBackBufferWidth / 2 - 10, graphics.PreferredBackBufferHeight / 2), Color.White);
-                }
-                else
-                {
-
-                }
-            }
-            if (players[0].health == 0 || players[1].health == 0 || gameClock.gameClock == 0)
+            
+            if (gameLoopLogic.players[0].health == 0 || gameLoopLogic.players[1].health == 0 || gameClock.gameClock == 0)
             {
                 spriteBatch.Draw(endGameScreen, new Vector2(0,0), Color.White);
-                spriteBatch.DrawString(font, winnerText, new Vector2(graphics.PreferredBackBufferWidth / 2 - (font.Texture.Width / 2), graphics.PreferredBackBufferHeight / 2), Color.White);
-            }
-        }
-        private void TimeUpConditions(GameTime gameTime)
-        {
-            if (players[0].score > players[1].score)
-            {
-                winnerText = "Player 1 wins!\nPress A to return \nto the main menu.";
-            }
-            else if (players[1].score > players[0].score)
-            {
-                winnerText = "Player 2 wins!\nPress A to return \nto the main menu.";
-            }
-            else
-            {
-
-                winnerText = "Draw!";
-            }
-            foreach (Player player in players)
-            {
-                player.Update(gameTime);
-                player.input.controlType = ControlType.Menu;
-                if (player.inputAction == InputAction.Confirm)
-                {
-                    currentGameState = GameStates.Menu;
-                }
-            }
-            active = false;
-        }
-        private void PlayerDeathConditions(GameTime gameTime)
-        {
-            if (players[0].health == 0)
-            {
-                winnerText = "Player 2 wins!\nPress A to return \nto the main menu.";
-            }
-            else if (players[1].health == 0)
-            {
-                winnerText = "Player 1 wins!\nPress A to return \nto the main menu.";
-            }
-            foreach (Player player in players)
-            {
-                player.Update(gameTime);
-                player.input.controlType = ControlType.Menu;
-                if (player.inputAction == InputAction.Confirm)
-                {
-                    currentGameState = GameStates.Menu;
-                }
-            }
-            active = false;
-        }
-        private void GameLoopLogic(GameTime gameTime)
-        {
-            foreach (Player player in players)
-            {
-                player.Update(gameTime);
-                if (player.inputAction == InputAction.Shoot || player.inputAction == InputAction.ChargeShot)
-                {
-                    projectiles.Add(new Projectile(player.inputAction, player.shootingAngle, player.projectileOrigin, content, graphics, player.playerIndex, boundary.bounds));
-                }
-                if (player.inputAction == InputAction.Reflect)
-                {
-                    foreach (Projectile projectile in projectiles)
-                    {
-                        if (projectile.bounds.Intersects(player.reflectHitBox))
-                        {
-                            if (projectile.recentlyReflected >= 50)
-                            {
-                                projectile.direction.Y = -projectile.direction.Y;
-                            }
-                            projectile.recentlyReflected = 0;
-                        }
-                    }
-                }
-                foreach (Projectile projectile in projectiles)
-                {
-                    projectile.Update(gameTime);
-                    if (projectile.collisionLocation == CollidedWith.TopGoal || projectile.collisionLocation == CollidedWith.BottomGoal)
-                    {
-                        if (player.playerIndex == PlayerIndex.One)
-                        {
-                            player.score++;
-                        }
-                        if (player.playerIndex == PlayerIndex.Two)
-                        {
-                            player.score++;
-                        }
-                    }
-                }
-                for (int i = 0; i < projectiles.Count; i++)
-                {
-                    if (projectiles[i].collisionLocation == CollidedWith.TopGoal || projectiles[i].collisionLocation == CollidedWith.BottomGoal)
-                    {
-                        projectiles.RemoveAt(i--);
-                    }
-                }
-                for (int i = 0; i < projectiles.Count; i++)
-                {
-                    if (projectiles[i].bounds.Intersects(player.hitBox))
-                    {
-                        projectiles.RemoveAt(i--);
-                        player.health--;
-                    }
-                }
+                spriteBatch.DrawString(font, gameLoopLogic.winnerText, new Vector2(graphics.PreferredBackBufferWidth / 2 - (font.Texture.Width / 2), graphics.PreferredBackBufferHeight / 2), Color.White);
             }
         }
     }
