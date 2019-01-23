@@ -26,7 +26,7 @@ namespace WizardDuel
             this.currentGameState = currentGameState;
             this.content = content;
             this.graphics = graphics;
-            input = new Input(ControlType.Menu, PlayerIndex.One);
+            input = new Input(ControlType.Menu, PlayerIndex.One, false);
         }
         public void Draw(SpriteBatch spriteBatch)
         {

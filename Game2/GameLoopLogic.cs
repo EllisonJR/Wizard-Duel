@@ -17,6 +17,8 @@ namespace WizardDuel
         public List<Projectile> projectiles = new List<Projectile>();
         public List<Player> players = new List<Player>();
 
+        AIcontroller aiController;
+
         ContentManager content;
         GraphicsDeviceManager graphics;
         Boundary boundary;
@@ -28,6 +30,7 @@ namespace WizardDuel
             this.content = content;
             this.graphics = graphics;
             this.boundary = boundary;
+            aiController = new AIcontroller(graphics);
         }
 
         public void ListChecks(GameTime gameTime)
@@ -38,6 +41,7 @@ namespace WizardDuel
                 if (player.inputAction == InputAction.Shoot || player.inputAction == InputAction.ChargeShot)
                 {
                     projectiles.Add(new Projectile(player.inputAction, player.shootingAngle, player.projectileOrigin, content, graphics, player.playerIndex, boundary.bounds));
+                    
                 }
                 if (player.inputAction == InputAction.Reflect)
                 {
@@ -84,6 +88,8 @@ namespace WizardDuel
                     }
                 }
             }
+            aiController.AIParser(players, projectiles);
+            aiController.Update(gameTime);
         }
         public void TimeUpConditions(GameTime gameTime)
         {

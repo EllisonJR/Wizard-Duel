@@ -14,11 +14,15 @@ namespace WizardDuel
 {
     class Player
     {
-        ContentManager content;
-        GraphicsDeviceManager graphics;
+        public ContentManager content;
+        public GraphicsDeviceManager graphics;
         public PlayerIndex playerIndex { get; }
+        public bool AI;
+        GameStates gameState;
         
-        int playerSpeed;
+        public int playerSpeed;
+
+        public Rectangle aiRectangle;
 
         public Texture2D playerSprite;
         Texture2D playerRetical;
@@ -52,12 +56,17 @@ namespace WizardDuel
 
         public InputAction inputAction { get; set; }
        
-        public Player(ControlType controlType, PlayerIndex playerIndex, ContentManager content, GraphicsDeviceManager graphics)
+        public Player(ControlType controlType, PlayerIndex playerIndex, ContentManager content, GraphicsDeviceManager graphics, GameStates gameState)
         {
-            input = new Input(controlType, playerIndex);
             this.content = content;
             this.graphics = graphics;
             this.playerIndex = playerIndex;
+            this.gameState = gameState;
+            if(this.gameState == GameStates.SinglePlayer && playerIndex == PlayerIndex.Two)
+            {
+                AI = true;
+            }
+            input = new Input(controlType, playerIndex, AI);
             health = 3;
             score = 0;
             playerSpeed = 5;
@@ -92,6 +101,10 @@ namespace WizardDuel
                 reflectHitBox = new Rectangle((int)reflectorLocation.X, (int)reflectorLocation.Y + playerSprite.Height, playerReflect.Width, playerReflect.Height + 5);
                 healthContainerLocation = new Vector2(graphics.PreferredBackBufferWidth / 2 - (playerHealthContainer.Width / 2), 30);
                 shotMeterLocation = new Vector2(playerLocation.X, playerLocation.Y - 4);
+                if(AI == true)
+                {
+                    aiRectangle = new Rectangle((int)playerLocation.X - 30, (int)playerLocation.Y, 90, playerSprite.Height);
+                }
             }
             healthBarLocation = new Vector2(healthContainerLocation.X + 3, healthContainerLocation.Y + 3);
         }
@@ -101,19 +114,25 @@ namespace WizardDuel
         }
         public void Update(GameTime gameTime)
         {
-            input.Update(gameTime);
-            ShotMeter();
-            inputAction = input.inputAction;
-            PlayerMovement(gameTime);
-            CalculateRotationOrigin();
-            CalculateProjectileOriginAndDirection();
-            shootingAngle = input.ReturnAngle();
+            if (AI == false)
+            {
+                input.Update(gameTime);
+                ShotMeter();
+                inputAction = input.inputAction;
+                PlayerMovement(gameTime);
+                CalculateRotationOrigin();
+                CalculateProjectileOriginAndDirection();
+                shootingAngle = input.ReturnAngle();
+            }
+            else if(AI == true)
+            {
+
+            }
         }
         public void Draw(SpriteBatch spriteBatch)
         {
             spriteBatch.Draw(playerSprite, playerLocation, Color.White);
-
-            if (input.inputAction == InputAction.Reflect)
+            if (inputAction == InputAction.Reflect)
             {
                 spriteBatch.Draw(playerReflect, reflectHitBox, Color.White);
             }
@@ -121,7 +140,7 @@ namespace WizardDuel
             {
 
             }
-            if(input.inputAction == InputAction.Charge || input.inputAction == InputAction.ChargeShotReady)
+            if(inputAction == InputAction.Charge || inputAction == InputAction.ChargeShotReady)
             {
                 spriteBatch.Draw(playerRetical, reticalLocation, null, Color.White, (float)input.ReturnAngle(), rotationOrigin, 1f, SpriteEffects.None, 1f);
             }
@@ -225,6 +244,7 @@ namespace WizardDuel
             reflectorLocation.X = playerLocation.X - 5;
             reflectHitBox.X = (int)playerLocation.X - 5;
             shotMeterLocation.X = (int)playerLocation.X;
+            aiRectangle.X = (int)playerLocation.X - 30;
         }
         public void CalculateProjectileOriginAndDirection()
         {

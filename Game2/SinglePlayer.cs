@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Diagnostics;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -12,9 +11,9 @@ using Microsoft.Xna.Framework.Content;
 
 namespace WizardDuel
 {
-    class GameMode1
+    class SinglePlayer
     {
-        public GameStates currentGameState { get; set; }
+        public GameStates currentGameState;
 
         ContentManager content;
         GraphicsDeviceManager graphics;
@@ -28,7 +27,7 @@ namespace WizardDuel
         GameClock gameClock;
         GameLoopLogic gameLoopLogic;
 
-        public GameMode1(GameStates currentGameState, ContentManager content, GraphicsDeviceManager graphics)
+        public SinglePlayer(GameStates currentGameState, ContentManager content, GraphicsDeviceManager graphics)
         {
             this.content = content;
             this.graphics = graphics;
@@ -37,20 +36,21 @@ namespace WizardDuel
             gameLoopLogic = new GameLoopLogic(content, graphics, boundary);
 
             gameLoopLogic.players.Add(new Player(ControlType.GamePlay, PlayerIndex.One, content, graphics, this.currentGameState));
-            gameLoopLogic.players.Add(new Player(ControlType.GamePlay, PlayerIndex.Two, content, graphics, this.currentGameState));
+            gameLoopLogic.players.Add(new Player(ControlType.GamePlay, PlayerIndex.Two, content, graphics, GameStates.SinglePlayer));
             gameClock = new GameClock(graphics, content);
             active = true;
         }
         public void Reset()
         {
-            foreach(Player player in gameLoopLogic.players)
+            foreach (Player player in gameLoopLogic.players)
             {
                 player.health = 3;
                 player.score = 0;
                 player.input.controlType = ControlType.GamePlay;
+                player.input.inputAction = InputAction.None;
             }
-            
-            currentGameState = GameStates.GameMode1;
+
+            currentGameState = GameStates.SinglePlayer;
             gameClock.ResetClock(currentGameState);
 
             active = true;
@@ -71,7 +71,7 @@ namespace WizardDuel
         {
             content.Unload();
             boundary.UnloadContent();
-            foreach(Player player in gameLoopLogic.players)
+            foreach (Player player in gameLoopLogic.players)
             {
                 player.UnloadContent();
             }
@@ -84,31 +84,27 @@ namespace WizardDuel
             }
             else
             {
-                if (gameClock.gameClock ==  0)
+                if (gameClock.gameClock == 0)
                 {
                     gameLoopLogic.TimeUpConditions(gameTime);
-                    foreach (Player player in gameLoopLogic.players)
+                    
+                    gameLoopLogic.players[0].Update(gameTime);
+                    gameLoopLogic.players[0].input.controlType = ControlType.Menu;
+                    if (gameLoopLogic.players[0].inputAction == InputAction.Confirm)
                     {
-                        player.Update(gameTime);
-                        player.input.controlType = ControlType.Menu;
-                        if (player.inputAction == InputAction.Confirm)
-                        {
-                            currentGameState = GameStates.Menu;
-                        }
+                        currentGameState = GameStates.Menu;
                     }
                     active = false;
                 }
-                else if(gameLoopLogic.players[0].health == 0 || gameLoopLogic.players[1].health == 0)
+                else if (gameLoopLogic.players[0].health == 0 || gameLoopLogic.players[1].health == 0)
                 {
                     gameLoopLogic.PlayerDeathConditions(gameTime);
-                    foreach (Player player in gameLoopLogic.players)
+
+                    gameLoopLogic.players[0].Update(gameTime);
+                    gameLoopLogic.players[0].input.controlType = ControlType.Menu;
+                    if (gameLoopLogic.players[0].inputAction == InputAction.Confirm)
                     {
-                        player.Update(gameTime);
-                        player.input.controlType = ControlType.Menu;
-                        if (player.inputAction == InputAction.Confirm)
-                        {
-                            currentGameState = GameStates.Menu;
-                        }
+                        currentGameState = GameStates.Menu;
                     }
                     active = false;
                 }
@@ -124,10 +120,10 @@ namespace WizardDuel
             gameLoopLogic.DrawLists(spriteBatch);
             gameClock.Draw(spriteBatch);
             boundary.Draw(spriteBatch);
-            
+
             if (gameLoopLogic.players[0].health == 0 || gameLoopLogic.players[1].health == 0 || gameClock.gameClock == 0)
             {
-                spriteBatch.Draw(endGameScreen, new Vector2(0,0), Color.White);
+                spriteBatch.Draw(endGameScreen, new Vector2(0, 0), Color.White);
                 spriteBatch.DrawString(font, gameLoopLogic.winnerText, new Vector2(graphics.PreferredBackBufferWidth / 2 - (font.Texture.Width / 2), graphics.PreferredBackBufferHeight / 2), Color.White);
             }
         }

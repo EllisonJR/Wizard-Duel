@@ -34,6 +34,8 @@ namespace WizardDuel
 
         public int recentlyReflected;
 
+        public bool aiMark;
+
         PlayerIndex playerIndex;
         InputAction inputAction;
 
@@ -89,6 +91,8 @@ namespace WizardDuel
             }
             direction.Normalize();
             recentlyReflected = 0;
+
+            aiMark = false;
         }
         public void Draw(SpriteBatch spriteBatch)
         {

@@ -57,7 +57,7 @@ namespace WizardDuel
         }
         public void ResetClock(GameStates currentGameState)
         {
-            if (currentGameState == GameStates.GameMode1)
+            if (currentGameState == GameStates.GameMode1 || currentGameState == GameStates.SinglePlayer)
             {
                 gameClock = 60;
                 startClock = 3;

@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 
-public enum GameStates { Menu, Options, GameMode1, Exit, Paused}
+public enum GameStates { Menu, Options, GameMode1, Exit, Paused, SinglePlayer}
 
 namespace WizardDuel
 {
@@ -24,6 +24,7 @@ namespace WizardDuel
         Menu menu;
         GameMode1 gameMode1;
         Options options;
+        SinglePlayer singlePlayer;
 
         public WizardDuel()
         {
@@ -31,6 +32,7 @@ namespace WizardDuel
             Content.RootDirectory = "Content";
             graphics.PreferredBackBufferHeight = 600;
             graphics.PreferredBackBufferWidth = 400;
+            
         }
 
         protected override void Initialize()
@@ -39,6 +41,7 @@ namespace WizardDuel
             menu = new Menu(currentGameState, Content, graphics);
             gameMode1 = new GameMode1(currentGameState, Content, graphics);
             options = new Options(currentGameState, Content, graphics);
+            singlePlayer = new SinglePlayer(currentGameState, Content, graphics);
 
             base.Initialize();
             Window.Title = "Wizard Duel";
@@ -59,6 +62,9 @@ namespace WizardDuel
                     break;
                 case GameStates.Options:
                     options.LoadContent();
+                    break;
+                case GameStates.SinglePlayer:
+                    singlePlayer.LoadContent();
                     break;
             }
         }
@@ -85,6 +91,12 @@ namespace WizardDuel
                         options.UnloadContent();
                     }
                     break;
+                case GameStates.SinglePlayer:
+                    if(currentGameState != GameStates.SinglePlayer)
+                    {
+                        singlePlayer.Unloadcontent();
+                    }
+                    break;
             }
         }
         
@@ -101,13 +113,23 @@ namespace WizardDuel
                     currentGameState = gameMode1.currentGameState;
                     gameMode1.currentGameState = currentGameState;
                     break;
+                case GameStates.SinglePlayer:
+                    singlePlayer.Update(gameTime);
+                    currentGameState = singlePlayer.currentGameState;
+                    singlePlayer.currentGameState = currentGameState;
+                    break;
                 case GameStates.Menu:
                     menu.Update(gameTime);
                     if (gameMode1.active == false)
                     {
                         gameMode1.Reset();
                     }
+                    if(singlePlayer.active == false)
+                    {
+                        singlePlayer.Reset();
+                    }
                     currentGameState = menu.currentGamestate;
+                    menu.currentGamestate = currentGameState;
                     break;
                 case GameStates.Options:
                     options.Update(gameTime);
@@ -117,6 +139,7 @@ namespace WizardDuel
 
             menu.currentGamestate = currentGameState;
             gameMode1.currentGameState = currentGameState;
+            singlePlayer.currentGameState = currentGameState;
             options.currentGameState = currentGameState;
 
             
@@ -148,6 +171,9 @@ namespace WizardDuel
                     break;
                 case GameStates.Options:
                     options.Draw(spriteBatch);
+                    break;
+                case GameStates.SinglePlayer:
+                    singlePlayer.Draw(spriteBatch);
                     break;
             }
 

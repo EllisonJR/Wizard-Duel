@@ -28,17 +28,19 @@ namespace WizardDuel
 
         float shootingAngle;
 
-        int chargeTimer;
-        int reflectTimer;
-        int reflected;
+        public int chargeTimer;
+        public int reflectTimer;
+        public int reflected;
         int menuTimer;
         public int dashed;
+
+        bool AI = false;
         
-        public Input(ControlType controlType, PlayerIndex playerIndex)
+        public Input(ControlType controlType, PlayerIndex playerIndex, bool AI)
         {
             this.controlType = controlType;
             this.playerIndex = playerIndex;
-
+            this.AI = AI;
             oldState = new GamePadState();
             newState = new GamePadState();
             leftJoyStick = new GamePadState();
@@ -50,38 +52,41 @@ namespace WizardDuel
 
         public void Update(GameTime gameTime)
         {
-            oldState = newState;
-            newState = GamePad.GetState(playerIndex);
-            leftJoyStick = GamePad.GetState(playerIndex);
-            rightJoyStick = GamePad.GetState(playerIndex);
-            
-            if(controlType == ControlType.Menu)
+            if (AI == false)
+            {
+                oldState = newState;
+                newState = GamePad.GetState(playerIndex);
+                leftJoyStick = GamePad.GetState(playerIndex);
+                rightJoyStick = GamePad.GetState(playerIndex);
+            }
+
+            if (controlType == ControlType.Menu)
             {
                 menuTimer += gameTime.ElapsedGameTime.Milliseconds;
-                if(oldState.Buttons.A == ButtonState.Released && newState.Buttons.A == ButtonState.Pressed)
+                if (oldState.Buttons.A == ButtonState.Released && newState.Buttons.A == ButtonState.Pressed)
                 {
                     inputAction = InputAction.Confirm;
                 }
-                else if(oldState.Buttons.B == ButtonState.Released && newState.Buttons.B == ButtonState.Pressed)
+                else if (oldState.Buttons.B == ButtonState.Released && newState.Buttons.B == ButtonState.Pressed)
                 {
                     inputAction = InputAction.Back;
                 }
-                else if(leftJoyStick.ThumbSticks.Left.X < -.5 & menuTimer > 250)
+                else if (leftJoyStick.ThumbSticks.Left.X < -.5 & menuTimer > 250)
                 {
                     inputAction = InputAction.LeftMenu;
                     menuTimer = 0;
                 }
-                else if(leftJoyStick.ThumbSticks.Left.X > .5 && menuTimer > 250)
+                else if (leftJoyStick.ThumbSticks.Left.X > .5 && menuTimer > 250)
                 {
                     inputAction = InputAction.RightMenu;
                     menuTimer = 0;
                 }
-                else if(leftJoyStick.ThumbSticks.Left.Y > .5 & menuTimer > 250)
+                else if (leftJoyStick.ThumbSticks.Left.Y > .5 & menuTimer > 250)
                 {
                     inputAction = InputAction.Up;
                     menuTimer = 0;
                 }
-                else if(leftJoyStick.ThumbSticks.Left.Y < -.5 && menuTimer > 250)
+                else if (leftJoyStick.ThumbSticks.Left.Y < -.5 && menuTimer > 250)
                 {
                     inputAction = InputAction.Down;
                     menuTimer = 0;
@@ -91,7 +96,7 @@ namespace WizardDuel
                     inputAction = InputAction.None;
                 }
             }
-            if (controlType == ControlType.GamePlay) 
+            if (controlType == ControlType.GamePlay)
             {
                 reflected += gameTime.ElapsedGameTime.Milliseconds;
                 reflectTimer += gameTime.ElapsedGameTime.Milliseconds;
@@ -99,9 +104,9 @@ namespace WizardDuel
                 {
                     inputAction = InputAction.Reflect;
                 }
-                else if(dashed <= 200)
+                else if (dashed <= 200)
                 {
-                    if(inputAction == InputAction.DashLeft)
+                    if (inputAction == InputAction.DashLeft)
                     {
                         dashed += gameTime.ElapsedGameTime.Milliseconds;
                         if (dashed >= 200)
@@ -118,7 +123,7 @@ namespace WizardDuel
                             }
                         }
                     }
-                    if(inputAction == InputAction.DashRight)
+                    if (inputAction == InputAction.DashRight)
                     {
                         dashed += gameTime.ElapsedGameTime.Milliseconds;
                         if (dashed >= 200)

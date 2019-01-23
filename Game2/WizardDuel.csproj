@@ -74,6 +74,7 @@
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="AIcontroller.cs" />
     <Compile Include="Boundary.cs" />
     <Compile Include="Game1.cs" />
     <Compile Include="GameClock.cs" />
@@ -91,6 +92,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="SinglePlayer.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MonoGame.Framework">
