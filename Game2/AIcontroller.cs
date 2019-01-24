@@ -23,9 +23,9 @@ namespace WizardDuel
         int reflected;
         int reflectTimer;
         int dashed;
+        int dashTimer;
 
-        int markCounter;
-        bool markMatch;
+        public int markCounter;
 
         public AIcontroller(GraphicsDeviceManager graphics)
         {
@@ -33,6 +33,7 @@ namespace WizardDuel
             reflected = 201;
             reflectTimer = 301;
             dashed = 201;
+            dashTimer = 701;
             markCounter = 0;
         }
 
@@ -49,73 +50,101 @@ namespace WizardDuel
         }
         public void InputAbstraction(GameTime gameTime)
         {
+            dashTimer += gameTime.ElapsedGameTime.Milliseconds;
+            dashed += gameTime.ElapsedGameTime.Milliseconds;
+            reflectTimer += gameTime.ElapsedGameTime.Milliseconds;
+            reflected += gameTime.ElapsedGameTime.Milliseconds;
+            directionalController += gameTime.ElapsedGameTime.Milliseconds;
             foreach (Player player in players)
             {
                 if(player.playerIndex == PlayerIndex.Two && player.AI == true)
                 {
-                    reflected += gameTime.ElapsedGameTime.Milliseconds;
-                    reflectTimer += gameTime.ElapsedGameTime.Milliseconds;
-                    directionalController += gameTime.ElapsedGameTime.Milliseconds;
                     foreach (Projectile projectile in projectiles)
                     {
-                        if (projectile.firstMark == true || projectile.secondMark == true)
+                        if (reflected < 200)
                         {
-                            if (reflected <= 200)
+                            player.inputAction = InputAction.Reflect;
+                        }
+                        else if (dashed <= 200)
+                        {
+                            if (player.inputAction == InputAction.DashLeft)
+                            {
+                                player.inputAction = InputAction.DashLeft;
+                            }
+                            if (player.inputAction == InputAction.DashRight)
+                            {
+                                player.inputAction = InputAction.DashRight;
+                            }
+                        }
+                        else if (projectile.bounds.Intersects(players[1].reflectHitBox))
+                        {
+                            if (reflectTimer > 300)
                             {
                                 player.inputAction = InputAction.Reflect;
+                                reflected = 0;
+                                reflectTimer = 0;
                             }
-                            else if (dashed <= 200)
+                        }
+                        else if (projectile.bounds.Intersects(player.aiRectangle))
+                        {
+                            if (projectile.bounds.Center.X > player.hitBox.Center.X && dashTimer >= 700)
                             {
-                                if (player.inputAction == InputAction.DashLeft)
-                                {
-                                    player.inputAction = InputAction.DashLeft;
-                                }
-                                if (player.inputAction == InputAction.DashRight)
-                                {
-                                    player.inputAction = InputAction.DashRight;
-                                }
+                                player.inputAction = InputAction.DashLeft;
+                                dashed = 0;
+                                dashTimer = 0;
                             }
-                            else if (projectile.bounds.Intersects(players[1].reflectHitBox))
+                            if (projectile.bounds.Center.X < player.hitBox.Center.X && dashTimer >= 700)
                             {
-                                if (reflectTimer > 300)
-                                {
-                                    player.inputAction = InputAction.Reflect;
-                                    reflectTimer = 0;
-                                }
+                                player.inputAction = InputAction.DashRight;
+                                dashed = 0;
+                                dashTimer = 0;
                             }
-                            else if (directionalController >= 700)
-                            {
-                                if (projectile.bounds.Center.X > player.hitBox.Center.X && projectile.direction.Y < 0)
-                                {
-                                    player.inputAction = InputAction.Right;
-                                }
-                                else if (projectile.bounds.Center.X < player.hitBox.Center.X && projectile.direction.Y < 0)
-                                {
-                                    player.inputAction = InputAction.Left;
-                                }
-                                else if (projectile.bounds.Left < player.hitBox.Center.X + 20 || projectile.bounds.Right > player.hitBox.Center.X - 20)
-                                {
-                                    player.inputAction = InputAction.None;
-                                }
-                                else
-                                {
-                                    player.inputAction = InputAction.None;
-                                }
-                            }
-                            else if (projectile.bounds.Intersects(player.aiRectangle))
+                        }
+                        
+                        else if (projectile.aiMark == true)
+                        {
+                            
+                            if (directionalController >= 700)
                             {
                                 if (projectile.bounds.Center.X > player.hitBox.Center.X)
                                 {
-                                    player.inputAction = InputAction.DashLeft;
-                                    dashed = 0;
+                                    if (projectile.bounds.Right < player.hitBox.Right + 5)
+                                    {
+                                        player.inputAction = InputAction.None;
+                                        directionalController = 400;
+                                    }
+                                    else
+                                    {
+                                        player.inputAction = InputAction.Right;
+                                    }
                                 }
-                                if (projectile.bounds.Center.X < player.hitBox.Center.X)
+                                else if (projectile.bounds.Center.X < player.hitBox.Center.X)
                                 {
-                                    player.inputAction = InputAction.DashRight;
-                                    dashed = 0;
+                                    if (projectile.bounds.Left > player.hitBox.Left - 5)
+                                    {
+                                        player.inputAction = InputAction.None;
+                                        directionalController = 400;
+                                    }
+                                    else
+                                    {
+                                        player.inputAction = InputAction.Left;
+                                    }
+                                }
+                                
+                                else
+                                {
+                                    player.inputAction = InputAction.None;
+                                    directionalController = 0;
                                 }
                             }
-                            directionalController = 0;
+                            else
+                            {
+                                player.inputAction = InputAction.None;
+                            }
+                        }
+                        else
+                        {
+                            player.inputAction = InputAction.None;
                         }
                     }
                 }
@@ -125,18 +154,14 @@ namespace WizardDuel
         {
             foreach (Projectile projectile in projectiles)
             {
-                if(projectile.aiMark == true && projectile.direction.Y < 0)
+                if (projectile.aiMark == true && projectile.direction.Y < 0)
                 {
                     projectile.aiMark = false;
                     markCounter--;
                 }
-                else if(projectile.aiMark == true && projectile.bounds.Intersects(players[1].aiRectangle))
+                if(projectile.aiMark == true && projectile.bounds.Top > players[1].hitBox.Bottom)
                 {
                     projectile.aiMark = false;
-                    markCounter--;
-                }
-                else if(projectile.aiMark == true && projectile.bounds.Intersects(players[1].hitBox))
-                {
                     markCounter--;
                 }
             }
@@ -144,7 +169,7 @@ namespace WizardDuel
             {
                 if (projectile.bounds.Top < graphics.PreferredBackBufferHeight / 2)
                 {
-                    if (markCounter == 2)
+                    if (markCounter == 1)
                     {
                         
                     }
@@ -152,7 +177,7 @@ namespace WizardDuel
                     {
                         if (projectile.aiMark == false)
                         {
-                            if (projectile.direction.Y > 0 || projectile.bounds.Top < players[1].aiRectangle.Bottom)
+                            if (projectile.direction.Y > 0 || projectile.bounds.Top < players[1].aiRectangle.Bottom || markCounter == 1)
                             {
 
                             }
@@ -165,12 +190,9 @@ namespace WizardDuel
                     }
                 }
             }
-            foreach(Projectile projectile in projectiles)
+            if(markCounter < 0)
             {
-                foreach(Projectile _projectile in projectiles)
-                {
-                    if(projectile.projectileDirection)
-                }
+                markCounter = 0;
             }
         }
         public void AIadjuster()

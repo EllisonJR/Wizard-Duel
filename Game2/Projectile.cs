@@ -21,8 +21,8 @@ namespace WizardDuel
 
         Vector2 origin;
         Vector2 location;
-        float angle;
-        float speed;
+        double angle;
+        double speed;
         public Rectangle bounds;
         public Vector2 direction;
         public Texture2D fireball { get; set; }
@@ -110,8 +110,8 @@ namespace WizardDuel
             {
                 direction.X = -direction.X;
             }
-            location.Y += direction.Y * speed;
-            location.X += direction.X * speed;
+            location.Y += direction.Y * (float)speed;
+            location.X += direction.X * (float)speed;
 
             bounds.Location = new Point((int)location.X, (int)location.Y);
         }

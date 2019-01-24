@@ -103,7 +103,7 @@ namespace WizardDuel
                 shotMeterLocation = new Vector2(playerLocation.X, playerLocation.Y - 4);
                 if(AI == true)
                 {
-                    aiRectangle = new Rectangle((int)playerLocation.X - 30, (int)playerLocation.Y, 90, playerSprite.Height);
+                    aiRectangle = new Rectangle((int)playerLocation.X - 45, (int)playerLocation.Y, 120, playerSprite.Height);
                 }
             }
             healthBarLocation = new Vector2(healthContainerLocation.X + 3, healthContainerLocation.Y + 3);

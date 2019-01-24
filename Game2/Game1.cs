@@ -26,6 +26,8 @@ namespace WizardDuel
         Options options;
         SinglePlayer singlePlayer;
 
+        SpriteFont font;
+
         public WizardDuel()
         {
             graphics = new GraphicsDeviceManager(this);
@@ -33,6 +35,7 @@ namespace WizardDuel
             graphics.PreferredBackBufferHeight = 600;
             graphics.PreferredBackBufferWidth = 400;
             
+
         }
 
         protected override void Initialize()
@@ -50,7 +53,7 @@ namespace WizardDuel
         protected override void LoadContent()
         {
             spriteBatch = new SpriteBatch(GraphicsDevice);
-            
+            font = Content.Load<SpriteFont>("fonts/gameclock");
 
             switch(currentGameState)
             {
@@ -176,7 +179,7 @@ namespace WizardDuel
                     singlePlayer.Draw(spriteBatch);
                     break;
             }
-
+            spriteBatch.DrawString(font, "Memory:" + GC.GetTotalMemory(false) / 1024, new Vector2(20, 20), Color.White);
             spriteBatch.End();
 
             base.Draw(gameTime);

@@ -77,6 +77,7 @@ namespace WizardDuel
                     if (projectiles[i].collisionLocation == CollidedWith.TopGoal || projectiles[i].collisionLocation == CollidedWith.BottomGoal)
                     {
                         projectiles.RemoveAt(i--);
+                        aiController.markCounter--;
                     }
                 }
                 for (int i = 0; i < projectiles.Count; i++)
@@ -85,9 +86,11 @@ namespace WizardDuel
                     {
                         projectiles.RemoveAt(i--);
                         player.health--;
+                        aiController.markCounter--;
                     }
                 }
             }
+            
             aiController.AIParser(players, projectiles);
             aiController.Update(gameTime);
         }
