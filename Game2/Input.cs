@@ -245,6 +245,7 @@ namespace WizardDuel
             {
                 shootingAngle = (float)Math.Atan2(rightJoyX, rightJoyY) + (float)(Math.PI);
             }
+            Debug.WriteLine(shootingAngle);
         }
         public float ReturnAngle()
         {

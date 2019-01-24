@@ -40,8 +40,14 @@ namespace WizardDuel
                 player.Update(gameTime);
                 if (player.inputAction == InputAction.Shoot || player.inputAction == InputAction.ChargeShot)
                 {
-                    projectiles.Add(new Projectile(player.inputAction, player.shootingAngle, player.projectileOrigin, content, graphics, player.playerIndex, boundary.bounds));
-                    
+                    if(player.AI == true)
+                    {
+                        projectiles.Add(new Projectile(player.inputAction, aiController.angle, aiController.projectileOrigin, content, graphics, player.playerIndex, boundary.bounds));
+                    }
+                    else if(player.AI == false)
+                    {
+                        projectiles.Add(new Projectile(player.inputAction, player.shootingAngle, player.projectileOrigin, content, graphics, player.playerIndex, boundary.bounds));
+                    }
                 }
                 if (player.inputAction == InputAction.Reflect)
                 {

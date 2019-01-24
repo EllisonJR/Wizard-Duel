@@ -24,8 +24,9 @@ namespace WizardDuel
 
         public Rectangle aiRectangle;
 
+        public float angle;
         public Texture2D playerSprite;
-        Texture2D playerRetical;
+        public Texture2D playerRetical;
         Texture2D playerReflect;
         Texture2D playerHealthContainer;
         Texture2D playerHealthBar;
@@ -40,7 +41,7 @@ namespace WizardDuel
         Vector2 rotationOrigin;
         public Vector2 projectileOrigin { get; set; }
         public Vector2 playerLocation;
-        Vector2 reticalLocation;
+        public Vector2 reticalLocation;
         Vector2 reflectorLocation;
         Vector2 healthContainerLocation;
         Vector2 healthBarLocation;
@@ -116,6 +117,7 @@ namespace WizardDuel
         {
             if (AI == false)
             {
+                angle = input.ReturnAngle();
                 input.Update(gameTime);
                 ShotMeter();
                 inputAction = input.inputAction;
@@ -142,7 +144,7 @@ namespace WizardDuel
             }
             if(inputAction == InputAction.Charge || inputAction == InputAction.ChargeShotReady)
             {
-                spriteBatch.Draw(playerRetical, reticalLocation, null, Color.White, (float)input.ReturnAngle(), rotationOrigin, 1f, SpriteEffects.None, 1f);
+                spriteBatch.Draw(playerRetical, reticalLocation, null, Color.White, angle, rotationOrigin, 1f, SpriteEffects.None, 1f);
             }
             else
             {
@@ -272,37 +274,76 @@ namespace WizardDuel
         }
         public void ShotMeter()
         {
-            if (shotMeterCounter < playerSprite.Width)
+            if (AI == true)
             {
-                shotMeterCounter += .2f;
-            }
-            if (input.inputAction == InputAction.Charge || input.inputAction == InputAction.ChargeShotReady)
-            {
-                if(shotMeterCounter < 10)
+                if (shotMeterCounter < playerSprite.Width)
                 {
-                    input.inputAction = InputAction.None;
+                    shotMeterCounter += .2f;
+                }
+                if (inputAction == InputAction.Charge || inputAction == InputAction.ChargeShotReady)
+                {
+                    if (shotMeterCounter < 10)
+                    {
+                        inputAction = InputAction.None;
+                    }
+                }
+                if (inputAction == InputAction.Shoot)
+                {
+                    if (shotMeterCounter < 10)
+                    {
+                        inputAction = InputAction.None;
+                    }
+                    else
+                    {
+                        shotMeterCounter -= 10;
+                    }
+                }
+                if (inputAction == InputAction.ChargeShot)
+                {
+                    if (shotMeterCounter < 20)
+                    {
+                        inputAction = InputAction.None;
+                    }
+                    else
+                    {
+                        shotMeterCounter -= 20;
+                    }
                 }
             }
-            if(input.inputAction == InputAction.Shoot)
+            else
             {
-                if (shotMeterCounter < 10)
+                if (shotMeterCounter < playerSprite.Width)
                 {
-                    input.inputAction = InputAction.None;
+                    shotMeterCounter += .2f;
                 }
-                else
+                if (input.inputAction == InputAction.Charge || input.inputAction == InputAction.ChargeShotReady)
                 {
-                    shotMeterCounter -= 10;
+                    if (shotMeterCounter < 10)
+                    {
+                        input.inputAction = InputAction.None;
+                    }
                 }
-            }
-            if(input.inputAction == InputAction.ChargeShot)
-            {
-                if (shotMeterCounter < 20)
+                if (input.inputAction == InputAction.Shoot)
                 {
-                    input.inputAction = InputAction.None;
+                    if (shotMeterCounter < 10)
+                    {
+                        input.inputAction = InputAction.None;
+                    }
+                    else
+                    {
+                        shotMeterCounter -= 10;
+                    }
                 }
-                else
+                if (input.inputAction == InputAction.ChargeShot)
                 {
-                    shotMeterCounter -= 20;
+                    if (shotMeterCounter < 20)
+                    {
+                        input.inputAction = InputAction.None;
+                    }
+                    else
+                    {
+                        shotMeterCounter -= 20;
+                    }
                 }
             }
         }

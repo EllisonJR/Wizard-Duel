@@ -179,7 +179,6 @@ namespace WizardDuel
                     singlePlayer.Draw(spriteBatch);
                     break;
             }
-            spriteBatch.DrawString(font, "Memory:" + GC.GetTotalMemory(false) / 1024, new Vector2(20, 20), Color.White);
             spriteBatch.End();
 
             base.Draw(gameTime);

@@ -25,7 +25,18 @@ namespace WizardDuel
         int dashed;
         int dashTimer;
 
+        int shotTimer;
+        int chargeTimer;
+        float realAngle;
+        public float angle;
+        bool gotAngle;
+        double angleRangeMin;
+        double angleRangeMax;
+
         public int markCounter;
+
+        Matrix shooterMatrix;
+        public Vector2 projectileOrigin;
 
         public AIcontroller(GraphicsDeviceManager graphics)
         {
@@ -35,13 +46,37 @@ namespace WizardDuel
             dashed = 201;
             dashTimer = 701;
             markCounter = 0;
+            gotAngle = false;
         }
 
         public void Update(GameTime gameTime)
         {
-            MarkProjectiles(gameTime);
-            InputAbstraction(gameTime);
-            AIadjuster();
+            Debug.WriteLine(angle);
+            shotTimer += gameTime.ElapsedGameTime.Milliseconds;
+            if(shotTimer < 2000)
+            {
+                MarkProjectiles(gameTime);
+                InputAbstraction(gameTime);
+                AIadjuster();
+            }
+            else
+            {
+                AdjustAngle();
+                gotAngle = true;
+                HumanizeAim();
+                CalculateShot();
+                players[1].angle = angle;
+                players[1].inputAction = InputAction.Charge;
+                if (angle >= angleRangeMin && angle <= angleRangeMax)
+                {
+                    players[1].inputAction = InputAction.Shoot;
+                    shotTimer = 0;
+                    gotAngle = false;
+                }
+            }
+            players[1].LockObjectstoPlayer();
+            players[1].ShotMeter();
+            players[1].CalculateRotationOrigin();
         }
         public void AIParser(List<Player> players, List<Projectile> projectiles)
         {
@@ -104,14 +139,14 @@ namespace WizardDuel
                         else if (projectile.aiMark == true)
                         {
                             
-                            if (directionalController >= 700)
+                            if (directionalController >= 400)
                             {
                                 if (projectile.bounds.Center.X > player.hitBox.Center.X)
                                 {
                                     if (projectile.bounds.Right < player.hitBox.Right + 5)
                                     {
                                         player.inputAction = InputAction.None;
-                                        directionalController = 400;
+                                        directionalController = 200;
                                     }
                                     else
                                     {
@@ -123,7 +158,7 @@ namespace WizardDuel
                                     if (projectile.bounds.Left > player.hitBox.Left - 5)
                                     {
                                         player.inputAction = InputAction.None;
-                                        directionalController = 400;
+                                        directionalController = 200;
                                     }
                                     else
                                     {
@@ -264,10 +299,48 @@ namespace WizardDuel
                     {
                         player.playerLocation.X = 25;
                     }
-                    player.LockObjectstoPlayer();
-                    player.ShotMeter();
                 }
             }
+        }
+        public double CalculateAngle()
+        {
+            Random randomAngle = new Random();
+            return randomAngle.NextDouble() * (0.96 - -0.96) + -0.96;
+        }
+        public void AdjustAngle()
+        {
+            if (gotAngle == false)
+            {
+                angle = (float)CalculateAngle();
+                realAngle = angle;
+                angleRangeMax = realAngle + .05;
+                angleRangeMin = realAngle - .05;
+                if (angle > 0)
+                {
+                    angle -= .70f;
+                }
+                else if (angle < 0)
+                {
+                    angle += .70f;
+                }
+            }
+        }
+        public void HumanizeAim()
+        {
+            if(angle > realAngle)
+            {
+                angle -= .07f;
+            }
+            if(angle < realAngle)
+            {
+                angle += .07f;
+            }
+
+        }
+        public void CalculateShot()
+        {
+            shooterMatrix = Matrix.CreateRotationZ(angle) * Matrix.CreateTranslation(players[1].reticalLocation.X, players[1].reticalLocation.Y, 0);
+            projectileOrigin = Vector2.Transform(new Vector2(0, players[1].playerRetical.Height), shooterMatrix);
         }
     }
 }
