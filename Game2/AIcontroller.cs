@@ -51,7 +51,7 @@ namespace WizardDuel
 
         public void Update(GameTime gameTime)
         {
-            Debug.WriteLine(angle);
+            
             shotTimer += gameTime.ElapsedGameTime.Milliseconds;
             if(shotTimer < 2000)
             {

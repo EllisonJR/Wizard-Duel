@@ -34,8 +34,7 @@ namespace WizardDuel
             Content.RootDirectory = "Content";
             graphics.PreferredBackBufferHeight = 600;
             graphics.PreferredBackBufferWidth = 400;
-            
-
+            IsMouseVisible = true;
         }
 
         protected override void Initialize()

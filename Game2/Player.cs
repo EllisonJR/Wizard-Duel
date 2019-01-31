@@ -38,7 +38,7 @@ namespace WizardDuel
         float shotMeterCounter;
         Vector2 shotMeterLocation;
 
-        Vector2 rotationOrigin;
+        public Vector2 rotationOrigin;
         public Vector2 projectileOrigin { get; set; }
         public Vector2 playerLocation;
         public Vector2 reticalLocation;
@@ -125,6 +125,7 @@ namespace WizardDuel
                 CalculateRotationOrigin();
                 CalculateProjectileOriginAndDirection();
                 shootingAngle = input.ReturnAngle();
+                input.GetRotationOrigin(reticalLocation);
             }
             else if(AI == true)
             {

@@ -73,7 +73,7 @@ namespace WizardDuel
             spriteBatch.Draw(options, menuPlacement, Color.White);
             spriteBatch.Draw(exit, exitPlacement, Color.White);
             spriteBatch.Draw(singeplayerbutton, singleplayerPlacement, Color.White);
-            spriteBatch.DrawString(font, "Ver 0.1.3", new Vector2(graphics.PreferredBackBufferWidth / 2 - 40, 550),Color.White);
+            spriteBatch.DrawString(font, "Ver 0.2.0", new Vector2(graphics.PreferredBackBufferWidth / 2 - 40, 550),Color.White);
             switch (menuPointer)
             {
                 case 0:
