@@ -22,6 +22,8 @@ namespace WizardDuel
         public GameStates currentGamestate { get; set; }
 
         int menuPointer;
+        MouseState mouse;
+        Point mousePoint;
         Vector2 pointerPosition;
         double UItimer;
 
@@ -29,7 +31,7 @@ namespace WizardDuel
         Texture2D play;
         Texture2D options;
         Texture2D exit;
-        Texture2D singeplayerbutton;
+        Texture2D singleplayerbutton;
 
         Vector2 playPlacement;
         Vector2 menuPlacement;
@@ -54,7 +56,7 @@ namespace WizardDuel
             options = content.Load<Texture2D>("sprites/optionsbutton");
             exit = content.Load<Texture2D>("sprites/exitbutton");
             font = content.Load<SpriteFont>("fonts/gameclock");
-            singeplayerbutton = content.Load<Texture2D>("sprites/singleplayerbutton");
+            singleplayerbutton = content.Load<Texture2D>("sprites/singleplayerbutton");
 
             playPlacement = new Vector2(CalculateTexturePlacement(indicator.Bounds.Width, indicator.Bounds.Height).X, CalculateTexturePlacement(indicator.Bounds.Width, indicator.Bounds.Height).Y);
             menuPlacement = new Vector2(CalculateTexturePlacement(indicator.Bounds.Width, indicator.Bounds.Height).X, CalculateTexturePlacement(indicator.Bounds.Width, indicator.Bounds.Height).Y + 50);
@@ -72,7 +74,7 @@ namespace WizardDuel
             spriteBatch.Draw(play, playPlacement, Color.White);
             spriteBatch.Draw(options, menuPlacement, Color.White);
             spriteBatch.Draw(exit, exitPlacement, Color.White);
-            spriteBatch.Draw(singeplayerbutton, singleplayerPlacement, Color.White);
+            spriteBatch.Draw(singleplayerbutton, singleplayerPlacement, Color.White);
             spriteBatch.DrawString(font, "Ver 0.2.0", new Vector2(graphics.PreferredBackBufferWidth / 2 - 40, 550),Color.White);
             switch (menuPointer)
             {
@@ -93,6 +95,9 @@ namespace WizardDuel
 
         public void Update(GameTime gameTime)
         {
+            mouse = Mouse.GetState();
+            mousePoint = new Point(mouse.Position.X, mouse.Position.Y);
+            MousePointer();
             input.Update(gameTime);
             if (input.inputAction == InputAction.Down)
             {
@@ -140,6 +145,13 @@ namespace WizardDuel
             Vector2 placement = new Vector2(Xplacement, Xplacement);
 
             return placement;
+        }
+        public void MousePointer()
+        {
+            if(singleplayerbutton.Bounds.Contains(mousePoint))
+            {
+                menuPointer = 0;
+            }
         }
     }
 }

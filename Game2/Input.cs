@@ -431,7 +431,7 @@ namespace WizardDuel
             {
                 Vector2 mousePos = new Vector2(mouseStateX, mouseStateY);
                 direction = mousePos - origin;
-                shootingAngle = (float)Math.Atan2(direction.X, direction.Y);
+                shootingAngle = (float)Math.Atan2(direction.X, -direction.Y);
                 
                 
 
