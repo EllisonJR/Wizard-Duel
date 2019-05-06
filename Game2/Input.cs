@@ -9,7 +9,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-public enum InputAction { LeftMenu, RightMenu, Left, Right, Up, Down, Shoot, Charge, ChargeShotReady, ChargeShot, Reflect, DashLeft, DashRight, Confirm, Back, None};
+public enum InputAction { None, RightMenu, Left, Right, Up, Down, Shoot, Charge, ChargeShotReady, ChargeShot, Reflect, DashLeft, DashRight, Confirm, Back, LeftMenu, BackHold, ConfirmHold, Pause};
 public enum ControlType { Menu, GamePlay};
 
 namespace WizardDuel
@@ -17,8 +17,9 @@ namespace WizardDuel
     class Input
     {
         public InputAction inputAction { get; set; }
+        public InputAction previousInputAction { get; set; }
         public ControlType controlType;
-        PlayerIndex playerIndex;
+        public PlayerIndex playerIndex;
 
         GamePadState oldState;
         GamePadState newState;
@@ -26,13 +27,13 @@ namespace WizardDuel
         GamePadState leftJoyStick;
         GamePadState rightJoyStick;
 
-        KeyboardState oldKBState;
-        KeyboardState newKBState;
-        int mouseStateX;
-        int mouseStateY;
-        MouseState mousePos;
-        MouseState newMouseState;
-        MouseState oldMouseState;
+        public KeyboardState oldKBState;
+        public KeyboardState newKBState;
+        public int mouseStateX;
+        public int mouseStateY;
+        public Vector2 mousePos;
+        public MouseState newMouseState;
+        public MouseState oldMouseState;
         Vector2 origin;
         Vector2 direction;
 
@@ -45,30 +46,46 @@ namespace WizardDuel
         public int dashed;
 
         bool AI = false;
+
+        int pauseTimer;
+
+        public bool slowed;
         
         public Input(ControlType controlType, PlayerIndex playerIndex, bool AI)
         {
             this.controlType = controlType;
             this.playerIndex = playerIndex;
             this.AI = AI;
+            slowed = false;
             oldState = new GamePadState();
             newState = new GamePadState();
             leftJoyStick = new GamePadState();
             rightJoyStick = new GamePadState();
-            dashed = 301;
-            reflected = 201;
-            reflectTimer = 301;
+            dashed = 451;
+            reflected = 401;
+            reflectTimer = 401;
         }
 
         public void Update(GameTime gameTime)
         {
+            previousInputAction = inputAction;
             if (GamePad.GetCapabilities(playerIndex).IsConnected == true)
             {
                 GamePadControls(gameTime);
+                if (oldState.Buttons.Start == ButtonState.Released && newState.Buttons.Start == ButtonState.Pressed)
+                {
+                    inputAction = InputAction.Pause;
+                }
             }
             else
             {
                 KeyboardControls(gameTime);
+                pauseTimer += gameTime.ElapsedGameTime.Milliseconds;
+                if (oldKBState.IsKeyUp(Keys.Escape) && newKBState.IsKeyDown(Keys.Escape) && pauseTimer > 100)
+                {
+                    inputAction = InputAction.Pause;
+                    pauseTimer = 0;
+                }
             }
         }
         public void KeyboardControls(GameTime gameTime)
@@ -79,41 +96,59 @@ namespace WizardDuel
             newMouseState = Mouse.GetState();
             mouseStateX = newMouseState.X;
             mouseStateY = newMouseState.Y;
-
-            if (AI == false)
-            {
-
-            }
+            mousePos = new Vector2(mouseStateX, mouseStateY);
+            
             if (controlType == ControlType.Menu)
             {
                 menuTimer += gameTime.ElapsedGameTime.Milliseconds;
-                if (oldKBState.IsKeyUp(Keys.Space) && newKBState.IsKeyDown(Keys.Space))
+                if (menuTimer > 100)
                 {
-                    inputAction = InputAction.Confirm;
-                }
-                else if (oldKBState.IsKeyUp(Keys.Escape) && newKBState.IsKeyDown(Keys.Escape))
-                {
-                    inputAction = InputAction.Back;
-                }
-                else if (oldKBState.IsKeyUp(Keys.A) && newKBState.IsKeyDown(Keys.A))
-                {
-                    inputAction = InputAction.LeftMenu;
-                    menuTimer = 0;
-                }
-                else if (oldKBState.IsKeyUp(Keys.D) && newKBState.IsKeyDown(Keys.D))
-                {
-                    inputAction = InputAction.RightMenu;
-                    menuTimer = 0;
-                }
-                else if (oldKBState.IsKeyUp(Keys.W) && newKBState.IsKeyDown(Keys.W))
-                {
-                    inputAction = InputAction.Up;
-                    menuTimer = 0;
-                }
-                else if (oldKBState.IsKeyUp(Keys.S) && newKBState.IsKeyDown(Keys.S))
-                {
-                    inputAction = InputAction.Down;
-                    menuTimer = 0;
+                    if (newMouseState.LeftButton == ButtonState.Pressed && oldMouseState.LeftButton == ButtonState.Pressed)
+                    {
+                        inputAction = InputAction.ConfirmHold;
+                    }
+                    else
+                    {
+                        inputAction = InputAction.None;
+                    }
+                    if (oldKBState.IsKeyDown(Keys.Escape) && newKBState.IsKeyDown(Keys.Escape))
+                    {
+                        inputAction = InputAction.BackHold;
+                    }
+                    else
+                    {
+                        inputAction = InputAction.None;
+                    }
+                    if (oldKBState.IsKeyUp(Keys.Space) && newKBState.IsKeyDown(Keys.Space) || newMouseState.LeftButton == ButtonState.Pressed && oldMouseState.LeftButton == ButtonState.Released)
+                    {
+                        inputAction = InputAction.Confirm;
+                        menuTimer = 0;
+                    }
+                    else if (oldKBState.IsKeyUp(Keys.Escape) && newKBState.IsKeyDown(Keys.Escape) || newMouseState.RightButton == ButtonState.Pressed && oldMouseState.RightButton == ButtonState.Released)
+                    {
+                        inputAction = InputAction.Back;
+                        menuTimer = 0;
+                    }
+                    else if (oldKBState.IsKeyUp(Keys.A) && newKBState.IsKeyDown(Keys.A))
+                    {
+                        inputAction = InputAction.LeftMenu;
+                        menuTimer = 0;
+                    }
+                    else if (oldKBState.IsKeyUp(Keys.D) && newKBState.IsKeyDown(Keys.D))
+                    {
+                        inputAction = InputAction.RightMenu;
+                        menuTimer = 0;
+                    }
+                    else if (oldKBState.IsKeyUp(Keys.W) && newKBState.IsKeyDown(Keys.W))
+                    {
+                        inputAction = InputAction.Up;
+                        menuTimer = 0;
+                    }
+                    else if (oldKBState.IsKeyUp(Keys.S) && newKBState.IsKeyDown(Keys.S))
+                    {
+                        inputAction = InputAction.Down;
+                        menuTimer = 0;
+                    }
                 }
                 else
                 {
@@ -124,16 +159,16 @@ namespace WizardDuel
             {
                 reflected += gameTime.ElapsedGameTime.Milliseconds;
                 reflectTimer += gameTime.ElapsedGameTime.Milliseconds;
-                if (reflected <= 200)
+                if (reflected <= 300)
                 {
                     inputAction = InputAction.Reflect;
                 }
-                else if (dashed <= 200)
+                else if (dashed <= 450 && slowed == false)
                 {
                     if (inputAction == InputAction.DashLeft)
                     {
                         dashed += gameTime.ElapsedGameTime.Milliseconds;
-                        if (dashed >= 200)
+                        if (dashed >= 450)
                         {
                             if (oldKBState.IsKeyUp(Keys.W) && newKBState.IsKeyDown(Keys.W))
                             {
@@ -150,7 +185,7 @@ namespace WizardDuel
                     if (inputAction == InputAction.DashRight)
                     {
                         dashed += gameTime.ElapsedGameTime.Milliseconds;
-                        if (dashed >= 200)
+                        if (dashed >= 450)
                         {
                             if (oldKBState.IsKeyUp(Keys.W) && newKBState.IsKeyDown(Keys.W))
                             {
@@ -194,7 +229,7 @@ namespace WizardDuel
                     }
                     else if (oldKBState.IsKeyUp(Keys.W) && newKBState.IsKeyDown(Keys.W))
                     {
-                        if (reflectTimer >= 300)
+                        if (reflectTimer >= 400)
                         {
                             inputAction = InputAction.Reflect;
                             reflectTimer = 0;
@@ -205,7 +240,7 @@ namespace WizardDuel
 
                         }
                     }
-                    else if (newKBState.IsKeyDown(Keys.A) && oldMouseState.RightButton == ButtonState.Pressed)
+                    else if (newKBState.IsKeyDown(Keys.A) && oldMouseState.RightButton == ButtonState.Pressed && slowed == false)
                     {
                         inputAction = InputAction.DashLeft;
                         dashed = 0;
@@ -214,7 +249,7 @@ namespace WizardDuel
                     {
                         inputAction = InputAction.Left;
                     }
-                    else if (newKBState.IsKeyDown(Keys.D) && oldMouseState.RightButton == ButtonState.Pressed)
+                    else if (newKBState.IsKeyDown(Keys.D) && oldMouseState.RightButton == ButtonState.Pressed && slowed == false)
                     {
                         inputAction = InputAction.DashRight;
                         dashed = 0;
@@ -242,33 +277,55 @@ namespace WizardDuel
             if (controlType == ControlType.Menu)
             {
                 menuTimer += gameTime.ElapsedGameTime.Milliseconds;
-                if (oldState.Buttons.A == ButtonState.Released && newState.Buttons.A == ButtonState.Pressed)
+                if (menuTimer > 100)
                 {
-                    inputAction = InputAction.Confirm;
-                }
-                else if (oldState.Buttons.B == ButtonState.Released && newState.Buttons.B == ButtonState.Pressed)
-                {
-                    inputAction = InputAction.Back;
-                }
-                else if (leftJoyStick.ThumbSticks.Left.X < -.5 & menuTimer > 250)
-                {
-                    inputAction = InputAction.LeftMenu;
-                    menuTimer = 0;
-                }
-                else if (leftJoyStick.ThumbSticks.Left.X > .5 && menuTimer > 250)
-                {
-                    inputAction = InputAction.RightMenu;
-                    menuTimer = 0;
-                }
-                else if (leftJoyStick.ThumbSticks.Left.Y > .5 & menuTimer > 250)
-                {
-                    inputAction = InputAction.Up;
-                    menuTimer = 0;
-                }
-                else if (leftJoyStick.ThumbSticks.Left.Y < -.5 && menuTimer > 250)
-                {
-                    inputAction = InputAction.Down;
-                    menuTimer = 0;
+                    if (oldState.Buttons.A == ButtonState.Pressed && newState.Buttons.A == ButtonState.Pressed)
+                    {
+                        inputAction = InputAction.ConfirmHold;
+                    }
+                    else
+                    {
+                        inputAction = InputAction.None;
+                    }
+                    if (oldState.Buttons.B == ButtonState.Pressed && newState.Buttons.B == ButtonState.Pressed)
+                    {
+                        inputAction = InputAction.BackHold;
+                        
+                    }
+                    else
+                    {
+                        inputAction = InputAction.None;
+                    }
+                    if (oldState.Buttons.A == ButtonState.Released && newState.Buttons.A == ButtonState.Pressed)
+                    {
+                        inputAction = InputAction.Confirm;
+                        menuTimer = 0;
+                    }
+                    else if (oldState.Buttons.B == ButtonState.Released && newState.Buttons.B == ButtonState.Pressed)
+                    {
+                        inputAction = InputAction.Back;
+                        menuTimer = 0;
+                    }
+                    else if (leftJoyStick.ThumbSticks.Left.X < -.5 & menuTimer > 250)
+                    {
+                        inputAction = InputAction.LeftMenu;
+                        menuTimer = 0;
+                    }
+                    else if (leftJoyStick.ThumbSticks.Left.X > .5 && menuTimer > 250)
+                    {
+                        inputAction = InputAction.RightMenu;
+                        menuTimer = 0;
+                    }
+                    else if (leftJoyStick.ThumbSticks.Left.Y > .5 & menuTimer > 250)
+                    {
+                        inputAction = InputAction.Up;
+                        menuTimer = 0;
+                    }
+                    else if (leftJoyStick.ThumbSticks.Left.Y < -.5 && menuTimer > 250)
+                    {
+                        inputAction = InputAction.Down;
+                        menuTimer = 0;
+                    }
                 }
                 else
                 {
@@ -279,16 +336,16 @@ namespace WizardDuel
             {
                 reflected += gameTime.ElapsedGameTime.Milliseconds;
                 reflectTimer += gameTime.ElapsedGameTime.Milliseconds;
-                if (reflected <= 200)
+                if (reflected <= 300)
                 {
                     inputAction = InputAction.Reflect;
                 }
-                else if (dashed <= 200)
+                else if (dashed <= 450)
                 {
                     if (inputAction == InputAction.DashLeft)
                     {
                         dashed += gameTime.ElapsedGameTime.Milliseconds;
-                        if (dashed >= 200)
+                        if (dashed >= 450)
                         {
                             if (oldState.Buttons.Y == ButtonState.Pressed && newState.Buttons.Y == ButtonState.Pressed)
                             {
@@ -305,7 +362,7 @@ namespace WizardDuel
                     if (inputAction == InputAction.DashRight)
                     {
                         dashed += gameTime.ElapsedGameTime.Milliseconds;
-                        if (dashed >= 200)
+                        if (dashed >= 450)
                         {
                             if (oldState.Buttons.Y == ButtonState.Pressed && newState.Buttons.Y == ButtonState.Pressed)
                             {
@@ -349,7 +406,7 @@ namespace WizardDuel
                     }
                     else if (oldState.Buttons.Y == ButtonState.Released && newState.Buttons.Y == ButtonState.Pressed)
                     {
-                        if (reflectTimer >= 300)
+                        if (reflectTimer >= 400)
                         {
                             inputAction = InputAction.Reflect;
                             reflectTimer = 0;

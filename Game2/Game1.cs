@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Content;
 
 using System;
 using System.Collections.Generic;
@@ -9,7 +10,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 
-public enum GameStates { Menu, Options, GameMode1, Exit, Paused, SinglePlayer}
+public enum GameStates { MainMenu, ControlScreen, MultiPlayer, Exit, Paused, SinglePlayer, PlayerSelectSingle, PlayerSelectDouble}
+public enum Characters { BuffWizard, TiredWizard}
 
 namespace WizardDuel
 {
@@ -21,16 +23,20 @@ namespace WizardDuel
         GameStates currentGameState;
         GameStates previousGameState;
 
-        Menu menu;
-        GameMode1 gameMode1;
-        Options options;
+        MainMenu menu;
+        Multiplayer multiPlayer;
+        ControlInfoScreen controlInfoScreen;
         SinglePlayer singlePlayer;
+        PlayererSelect playerSelect;
 
         SpriteFont font;
+
+        bool importedChoices;
 
         public WizardDuel()
         {
             graphics = new GraphicsDeviceManager(this);
+            graphics.GraphicsProfile = GraphicsProfile.HiDef;
             Content.RootDirectory = "Content";
             graphics.PreferredBackBufferHeight = 600;
             graphics.PreferredBackBufferWidth = 400;
@@ -39,11 +45,12 @@ namespace WizardDuel
 
         protected override void Initialize()
         {
-            currentGameState = GameStates.Menu;
-            menu = new Menu(currentGameState, Content, graphics);
-            gameMode1 = new GameMode1(currentGameState, Content, graphics);
-            options = new Options(currentGameState, Content, graphics);
+            currentGameState = GameStates.MainMenu;
+            menu = new MainMenu(currentGameState, Content, graphics);
+            multiPlayer = new Multiplayer(currentGameState, Content, graphics);
+            controlInfoScreen = new ControlInfoScreen(currentGameState, Content, graphics);
             singlePlayer = new SinglePlayer(currentGameState, Content, graphics);
+            playerSelect = new PlayererSelect(currentGameState, Content, graphics);
 
             base.Initialize();
             Window.Title = "Wizard Duel";
@@ -54,19 +61,29 @@ namespace WizardDuel
             spriteBatch = new SpriteBatch(GraphicsDevice);
             font = Content.Load<SpriteFont>("fonts/gameclock");
 
-            switch(currentGameState)
+            switch (currentGameState)
             {
-                case GameStates.GameMode1:
-                    gameMode1.LoadContent();
+                case GameStates.MultiPlayer:
+                    if (controlInfoScreen.outsideGamestate != GameStates.MultiPlayer)
+                    {
+                        multiPlayer.LoadContent();
+                    }
                     break;
-                case GameStates.Menu:
+                case GameStates.MainMenu:
                     menu.LoadContent();
                     break;
-                case GameStates.Options:
-                    options.LoadContent();
+                case GameStates.ControlScreen:
+                    controlInfoScreen.LoadContent();
                     break;
                 case GameStates.SinglePlayer:
-                    singlePlayer.LoadContent();
+                    if (controlInfoScreen.outsideGamestate != GameStates.SinglePlayer)
+                    {
+                        singlePlayer.LoadContent();
+                    }
+                    break;
+                case GameStates.PlayerSelectSingle:
+                case GameStates.PlayerSelectDouble:
+                    playerSelect.LoadContent();
                     break;
             }
         }
@@ -75,22 +92,22 @@ namespace WizardDuel
         {
             switch (currentGameState)
             {
-                case GameStates.GameMode1:
-                    if (currentGameState != GameStates.GameMode1)
+                case GameStates.MultiPlayer:
+                    if (currentGameState != GameStates.MultiPlayer)
                     {
-                        gameMode1.Unloadcontent();
+                        multiPlayer.Unloadcontent();
                     }
                     break;
-                case GameStates.Menu:
-                    if(currentGameState != GameStates.Menu)
+                case GameStates.MainMenu:
+                    if(currentGameState != GameStates.MainMenu)
                     {
                         menu.UnloadContent();
                     }
                     break;
-                case GameStates.Options:
-                    if(currentGameState != GameStates.Options)
+                case GameStates.ControlScreen:
+                    if(currentGameState != GameStates.ControlScreen)
                     {
-                        options.UnloadContent();
+                        controlInfoScreen.UnloadContent();
                     }
                     break;
                 case GameStates.SinglePlayer:
@@ -101,57 +118,122 @@ namespace WizardDuel
                     break;
             }
         }
-        
+
         protected override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
 
             previousGameState = currentGameState;
+            
 
             switch (currentGameState)
             {
-                case GameStates.GameMode1:
-                    gameMode1.Update(gameTime);
-                    currentGameState = gameMode1.currentGameState;
-                    gameMode1.currentGameState = currentGameState;
+                case GameStates.MultiPlayer:
+                    if (importedChoices == false)
+                    {
+                        multiPlayer.CharacterChoices(playerSelect.PlayerOneChoice(), playerSelect.PlayerTwoChoice());
+                        importedChoices = true;
+                    }
+                    controlInfoScreen.timer = 0;
+                    controlInfoScreen.outsideGamestate = currentGameState;
+                    multiPlayer.Update(gameTime);
+                    menu.input.inputAction = InputAction.None;
+                    playerSelect.Reset();
+                    currentGameState = multiPlayer.currentGameState;
+                    multiPlayer.currentGameState = currentGameState;
                     break;
                 case GameStates.SinglePlayer:
+                    if(importedChoices == false)
+                    {
+                        singlePlayer.CharacterChoices(playerSelect.PlayerOneChoice(), 2);
+                        importedChoices = true;
+                    }
+                    controlInfoScreen.timer = 0;
+                    controlInfoScreen.outsideGamestate = currentGameState;
                     singlePlayer.Update(gameTime);
+                    menu.input.inputAction = InputAction.None;
+                    playerSelect.Reset();
                     currentGameState = singlePlayer.currentGameState;
                     singlePlayer.currentGameState = currentGameState;
                     break;
-                case GameStates.Menu:
+                case GameStates.MainMenu:
                     menu.Update(gameTime);
-                    if (gameMode1.active == false)
+                    controlInfoScreen.outsideGamestate = currentGameState;
+                    controlInfoScreen.timer = 0;
+                    if (multiPlayer.active == false)
                     {
-                        gameMode1.Reset();
+                        multiPlayer.Reset();
+                        multiPlayer.paused = false;
                     }
-                    if(singlePlayer.active == false)
+                    if (singlePlayer.active == false)
                     {
                         singlePlayer.Reset();
+                        singlePlayer.paused = false;
                     }
+                    playerSelect.active = false;
+                    playerSelect.inputs.Clear();
                     currentGameState = menu.currentGamestate;
                     menu.currentGamestate = currentGameState;
                     break;
-                case GameStates.Options:
-                    options.Update(gameTime);
-                    currentGameState = options.currentGameState;
+                case GameStates.ControlScreen:
+                    menu.fromNonCombat = true;
+                    singlePlayer.gameLoopLogic.backFromPause = true;
+                    multiPlayer.gameLoopLogic.backFromPause = true;
+                    menu.input.inputAction = InputAction.None;
+                    controlInfoScreen.Update(gameTime);
+                    if(controlInfoScreen.nonCombatTransition.currentFrame == 6 && controlInfoScreen.outsideGamestate == GameStates.SinglePlayer)
+                    {
+                        singlePlayer.gameLoopLogic.upwardSwipeTransition.currentFrame = 0;
+                    }
+                    if (controlInfoScreen.nonCombatTransition.currentFrame == 6 && controlInfoScreen.outsideGamestate == GameStates.MultiPlayer)
+                    {
+                        multiPlayer.gameLoopLogic.upwardSwipeTransition.currentFrame = 0;
+                    }
+                    currentGameState = controlInfoScreen.currentGameState;
+                    controlInfoScreen.currentGameState = currentGameState;
+                    break;
+                case GameStates.PlayerSelectSingle:
+                case GameStates.PlayerSelectDouble:
+                    importedChoices = false;
+                    singlePlayer.gameLoopLogic.backFromPause = true;
+                    singlePlayer.gameLoopLogic.upwardSwipeTransition.currentFrame = 0;
+                    if (multiPlayer.active == false)
+                    {
+                        multiPlayer.Reset();
+                    }
+                    if (singlePlayer.active == false)
+                    {
+                        singlePlayer.Reset();
+                        singlePlayer.paused = false;
+                    }
+                    if(playerSelect.active == false)
+                    {
+                        playerSelect.Reset(currentGameState);
+                        playerSelect.active = true;
+                    }
+
+                    playerSelect.Update(gameTime);
+                    menu.fromNonCombat = true;
+                    menu.input.inputAction = InputAction.None;
+                    currentGameState = playerSelect.currentGameState;
+                    playerSelect.currentGameState = currentGameState;
                     break;
             }
 
             menu.currentGamestate = currentGameState;
-            gameMode1.currentGameState = currentGameState;
+            multiPlayer.currentGameState = currentGameState;
             singlePlayer.currentGameState = currentGameState;
-            options.currentGameState = currentGameState;
+            controlInfoScreen.currentGameState = currentGameState;
+            playerSelect.currentGameState = currentGameState;
 
-            
             if (currentGameState != previousGameState)
             {
                 LoadContent();
+                
                 UnloadContent();
             }
-            
-            if(currentGameState == GameStates.Exit)
+
+            if (currentGameState == GameStates.Exit)
             {
                 Exit();
             }
@@ -162,20 +244,24 @@ namespace WizardDuel
             GraphicsDevice.Clear(Color.Black);
 
             spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend);
-
+            
             switch (currentGameState)
             {
-                case GameStates.GameMode1:
-                    gameMode1.Draw(spriteBatch);
+                case GameStates.MultiPlayer:
+                    multiPlayer.Draw(spriteBatch);
                     break;
-                case GameStates.Menu:
+                case GameStates.MainMenu:
                     menu.Draw(spriteBatch);
                     break;
-                case GameStates.Options:
-                    options.Draw(spriteBatch);
+                case GameStates.ControlScreen:
+                    controlInfoScreen.Draw(spriteBatch);
                     break;
                 case GameStates.SinglePlayer:
                     singlePlayer.Draw(spriteBatch);
+                    break;
+                case GameStates.PlayerSelectSingle:
+                case GameStates.PlayerSelectDouble:
+                    playerSelect.Draw(spriteBatch);
                     break;
             }
             spriteBatch.End();

@@ -53,7 +53,7 @@ namespace WizardDuel
         {
             
             shotTimer += gameTime.ElapsedGameTime.Milliseconds;
-            if(shotTimer < 2000)
+            if(shotTimer < 2000000)
             {
                 MarkProjectiles(gameTime);
                 InputAbstraction(gameTime);
@@ -189,7 +189,7 @@ namespace WizardDuel
         {
             foreach (Projectile projectile in projectiles)
             {
-                if (projectile.aiMark == true && projectile.direction.Y < 0)
+                if (projectile.aiMark == true && projectile.direction.Y < 0 && projectile.playerIndex == PlayerIndex.One)
                 {
                     projectile.aiMark = false;
                     markCounter--;
@@ -244,7 +244,7 @@ namespace WizardDuel
                             {
                                 player.playerSpeed = 20;
                             }
-                            if (dashed > 100 && dashed <= 150)
+                            if (dashed > 100 && dashed <= 175)
                             {
                                 player.playerSpeed = 8;
                             }
@@ -252,12 +252,16 @@ namespace WizardDuel
                             {
                                 player.playerSpeed = 7;
                             }
-                            if (dashed > 200)
+                            if (dashed > 200 && dashed <= 450)
                             {
-                                player.playerSpeed = 5;
-                                player.inputAction = InputAction.None;
+                                player.playerSpeed = 0;
                             }
                             player.playerLocation.X -= player.playerSpeed;
+                            if (dashed > 450)
+                            {
+                                player.inputAction = InputAction.None;
+                                player.playerSpeed = 5;
+                            }
                         }
                         if (player.inputAction == InputAction.DashRight)
                         {
@@ -265,20 +269,24 @@ namespace WizardDuel
                             {
                                 player.playerSpeed = 20;
                             }
-                            if (dashed > 100 && dashed <= 150)
+                            if (dashed > 100 && dashed <= 175)
                             {
                                 player.playerSpeed = 8;
                             }
-                            if (dashed > 250 && dashed <= 200)
+                            if (dashed > 175 && dashed <= 200)
                             {
                                 player.playerSpeed = 7;
                             }
-                            if (dashed > 200)
+                            if (dashed > 200 && dashed <= 450)
                             {
-                                player.playerSpeed = 5;
-                                player.inputAction = InputAction.None;
+                                player.playerSpeed = 0;
                             }
                             player.playerLocation.X += player.playerSpeed;
+                            if (dashed > 450)
+                            {
+                                player.inputAction = InputAction.None;
+                                player.playerSpeed = 5;
+                            }
                         }
                     }
                     if (player.inputAction == InputAction.Left)
@@ -291,13 +299,13 @@ namespace WizardDuel
                         player.playerSpeed = 5;
                         player.playerLocation.X += player.playerSpeed;
                     }
-                    if (player.playerLocation.X > graphics.PreferredBackBufferWidth - player.playerSprite.Width - 25)
+                    if (player.playerLocation.X + (player.playerAnimations.width / 2) + (player.hitBox.Width / 2) > graphics.PreferredBackBufferWidth - 25)
                     {
-                        player.playerLocation.X = graphics.PreferredBackBufferWidth - player.playerSprite.Width - 25;
+                        player.playerLocation.X = graphics.PreferredBackBufferWidth - 25 - (player.playerAnimations.width / 2) - (player.hitBox.Width / 2);
                     }
-                    if (player.playerLocation.X < 25)
+                    if (player.playerLocation.X + (player.playerAnimations.width / 2) - (player.hitBox.Width / 2) < 25)
                     {
-                        player.playerLocation.X = 25;
+                        player.playerLocation.X = 25 - (player.playerAnimations.width / 2) + (player.hitBox.Width / 2);
                     }
                 }
             }

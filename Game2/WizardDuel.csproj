@@ -51,7 +51,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>Icon.ico</ApplicationIcon>
+    <ApplicationIcon>haticon_Mg3_icon.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup>
@@ -77,14 +77,17 @@
     <Compile Include="AIcontroller.cs" />
     <Compile Include="Animation.cs" />
     <Compile Include="Boundary.cs" />
+    <Compile Include="CharacterAdjuster.cs" />
+    <Compile Include="FireballImpact.cs" />
     <Compile Include="Game1.cs" />
     <Compile Include="GameClock.cs" />
     <Compile Include="GameLoopLogic.cs" />
-    <Compile Include="GameMode1.cs" />
+    <Compile Include="MultiPlayer.cs" />
     <Compile Include="Input.cs" />
-    <Compile Include="Menu.cs" />
-    <Compile Include="Options.cs" />
+    <Compile Include="MainMenu.cs" />
+    <Compile Include="ControlInfoScreen.cs" />
     <Compile Include="Player.cs" />
+    <Compile Include="PlayererSelect.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Projectile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -94,6 +97,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="SinglePlayer.cs" />
+    <Compile Include="WallSegment.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MonoGame.Framework">
@@ -104,6 +108,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="haticon_Mg3_icon.ico" />
     <Content Include="Icon.ico" />
     <None Include="Resources\Icon.ico" />
   </ItemGroup>

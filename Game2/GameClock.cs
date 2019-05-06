@@ -22,10 +22,20 @@ namespace WizardDuel
         public int startClock { get; set; }
         double currentTime;
 
+        Texture2D countDownT;
+        public Animation countDown;
+
+        Vector2 center;
+
         public GameClock(GraphicsDeviceManager graphics, ContentManager content)
         {
             this.graphics = graphics;
             font = content.Load<SpriteFont>("fonts/gameclock");
+
+            countDownT = content.Load<Texture2D>("full screen art/countdown");
+            countDown = new Animation(countDownT, 5, 8);
+
+            center = new Vector2(graphics.PreferredBackBufferWidth / 2 - countDown.width / 2, graphics.PreferredBackBufferHeight / 2 - countDown.height / 2);
 
             gameClock = 60;
             startClock = 3;
@@ -34,12 +44,13 @@ namespace WizardDuel
         public void GameMode1Clock(GameTime gameTime)
         {
             currentTime -= (float)gameTime.ElapsedGameTime.TotalSeconds;
+            countDown.Update(gameTime);
             if (currentTime < 0)
             {
                 if(startClock > -1)
                 {
                     startClock--;
-                    currentTime =1;
+                    currentTime = 1;
                 }
                 if(startClock <= -1)
                 {
@@ -57,10 +68,11 @@ namespace WizardDuel
         }
         public void ResetClock(GameStates currentGameState)
         {
-            if (currentGameState == GameStates.GameMode1 || currentGameState == GameStates.SinglePlayer)
+            if (currentGameState == GameStates.MultiPlayer || currentGameState == GameStates.SinglePlayer)
             {
                 gameClock = 60;
                 startClock = 3;
+                countDown.currentFrame = 0;
             }
         }
         public void Draw(SpriteBatch spriteBatch)
@@ -73,20 +85,9 @@ namespace WizardDuel
             {
                 spriteBatch.DrawString(font, "00:" + gameClock, new Vector2(graphics.PreferredBackBufferWidth - 90, (graphics.PreferredBackBufferHeight / 2)), Color.White);
             }
-            if (startClock > -1)
+            if (startClock > -2)
             {
-                if (startClock == 0)
-                {
-                    spriteBatch.DrawString(font, "Go!", new Vector2(graphics.PreferredBackBufferWidth / 2 - 10, graphics.PreferredBackBufferHeight / 2), Color.White);
-                }
-                else if (startClock > 0)
-                {
-                    spriteBatch.DrawString(font, "" + startClock, new Vector2(graphics.PreferredBackBufferWidth / 2 - 10, graphics.PreferredBackBufferHeight / 2), Color.White);
-                }
-                else
-                {
-
-                }
+                countDown.Draw(spriteBatch, center);
             }
         }
     }
