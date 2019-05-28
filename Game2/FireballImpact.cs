@@ -22,11 +22,6 @@ namespace WizardDuel
 
         public int timer;
 
-        Texture2D impactT;
-        Texture2D impactT2;
-        Texture2D impactT3;
-        Texture2D impactT4;
-
         public Animation impact;
         public Animation impact2;
         public Animation impact3;
@@ -49,6 +44,11 @@ namespace WizardDuel
 
         public bool doubleCharge = false;
 
+        public Texture2D impactT;
+        public Texture2D impactT2;
+        public Texture2D impactT3;
+        public Texture2D impactT4;
+
         public FireballImpact(GraphicsDeviceManager graphics, ContentManager content, Vector2 location, int bulletType, bool chargeShot, bool onPlayer, float angle, bool doubleCharge)
         {
             this.graphics = graphics;
@@ -66,11 +66,6 @@ namespace WizardDuel
                 {
                     if (doubleCharge == true)
                     {
-                        impactT = content.Load<Texture2D>("sprites/player effects/multichargeimpactone");
-                        impactT2 = content.Load<Texture2D>("sprites/player effects/multichargeimpacttwo");
-                        impactT3 = content.Load<Texture2D>("sprites/player effects/multichargeimpactthree");
-                        impactT4 = content.Load<Texture2D>("sprites/player effects/multichargeimpactfour");
-
                         impact = new Animation(impactT, 2, 5);
                         impact2 = new Animation(impactT2, 3, 5);
                         impact3 = new Animation(impactT3, 2, 5);
@@ -136,6 +131,93 @@ namespace WizardDuel
                 impactLocation = new Vector2(location.X - impact.width / 2, location.Y - impact.height / 2);
             }
         }
+        public FireballImpact(GraphicsDeviceManager graphics, ContentManager content, Vector2 location, int bulletType, bool chargeShot, bool onPlayer, float angle, bool doubleCharge, Texture2D big1, Texture2D big2, Texture2D big3, Texture2D big4)
+        {
+            this.graphics = graphics;
+            this.content = content;
+            this.bulletType = bulletType;
+            this.chargeShot = chargeShot;
+            this.onPlayer = onPlayer;
+            this.angle = angle;
+            this.doubleCharge = doubleCharge;
+
+            sleepTimer = 0;
+            if (chargeShot == true)
+            {
+                if (onPlayer == false)
+                {
+                    if (doubleCharge == true)
+                    {
+                        impactT = big1;
+                        impactT2 = big2;
+                        impactT3 = big3;
+                        impactT4 = big4;
+
+                        impact = new Animation(impactT, 2, 5);
+                        impact2 = new Animation(impactT2, 3, 5);
+                        impact3 = new Animation(impactT3, 2, 5);
+                        impact4 = new Animation(impactT4, 3, 5);
+
+                        impact.frameTime = 150;
+                        impact2.frameTime = 150;
+                        impact3.frameTime = 150;
+                        impact4.frameTime = 150;
+
+                        impact.currentFrame = 0;
+                        impact2.currentFrame = 0;
+                        impact3.currentFrame = 0;
+                        impact4.currentFrame = 0;
+
+                        impactLocation = new Vector2(location.X - impact.width / 2, location.Y - impact.height / 2);
+                    }
+                    else
+                    {
+                        impactT = content.Load<Texture2D>("sprites/border items/chargeimpact");
+
+                        impact = new Animation(impactT, 3, 8);
+
+                        impactLocation = new Vector2(location.X - impact.width / 2, location.Y - impact.height / 2);
+                        if (bulletType == 1)
+                        {
+                            impact.currentFrame = 0;
+                        }
+                        if (bulletType == 2)
+                        {
+                            impact.currentFrame = 9;
+
+                            impactBounds = new Rectangle((int)impactLocation.X, (int)impactLocation.Y, impact.width, impact.height);
+                            sleepyEffectBounds = new Rectangle((int)impactBounds.X + 11, (int)impactBounds.Y, impactBounds.Width - 38, impactBounds.Height);
+                        }
+                    }
+                }
+                else if (onPlayer == true)
+                {
+                    if (bulletType == 1)
+                    {
+                        impactT = content.Load<Texture2D>("sprites/player effects/buffimpactonplayer");
+
+                        impact = new Animation(impactT, 1, 10);
+
+                        impactLocation = new Vector2(location.X - impact.width / 2, location.Y - impact.height / 2);
+                    }
+                    if (bulletType == 2)
+                    {
+                        impactT = content.Load<Texture2D>("sprites/player effects/tiredwizardonplayershot");
+
+                        impact = new Animation(impactT, 1, 12);
+
+                        impactLocation = new Vector2(location.X - impact.width / 2, location.Y - impact.height / 2);
+                    }
+                }
+            }
+            else if (chargeShot == false)
+            {
+                impactT = content.Load<Texture2D>("sprites/player effects/nonchargeimpact");
+                impact = new Animation(impactT, 2, 4);
+                impactBounds = new Rectangle((int)impactLocation.X, (int)impactLocation.Y, impact.width, impact.height);
+                impactLocation = new Vector2(location.X - impact.width / 2, location.Y - impact.height / 2);
+            }
+        }
         public void Update(GameTime gameTime)
         {
             if (chargeShot == true && doubleCharge == false)
@@ -193,6 +275,7 @@ namespace WizardDuel
             }
 
         }
+
         public void Draw(SpriteBatch spriteBatch)
         {
             if (onPlayer == false && doubleCharge == false)

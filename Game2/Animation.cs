@@ -58,6 +58,18 @@ namespace WizardDuel
 
             frameTime = 100;
         }
+        public Animation(Texture2D texture, int rows, int columns, int currentFrame, int frameTime)
+        {
+            spriteSheet = texture;
+            this.rows = rows;
+            this.columns = columns;
+            currentFrame = 0;
+            totalFrames = rows * columns;
+            width = spriteSheet.Width / columns;
+            height = spriteSheet.Height / rows;
+            this.currentFrame = currentFrame;
+            this.frameTime = frameTime;
+        }
         public void Update(GameTime gameTime)
         {
             frameTimer += gameTime.ElapsedGameTime.Milliseconds;

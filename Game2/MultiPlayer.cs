@@ -14,7 +14,13 @@ namespace WizardDuel
 {
     class Multiplayer
     {
+
         public GameStates currentGameState { get; set; }
+
+        public Texture2D impactT;
+        public Texture2D impactT2;
+        public Texture2D impactT3;
+        public Texture2D impactT4;
 
         ContentManager content;
         GraphicsDeviceManager graphics;
@@ -32,18 +38,20 @@ namespace WizardDuel
 
         public bool paused = false;
 
-        public Multiplayer(GameStates currentGameState, ContentManager content, GraphicsDeviceManager graphics)
+        public Multiplayer(GameStates currentGameState, ContentManager content, GraphicsDeviceManager graphics, Texture2D big1, Texture2D big2, Texture2D big3, Texture2D big4)
         {
             this.content = content;
             this.graphics = graphics;
             this.currentGameState = currentGameState;
             boundary = new Boundary(content, graphics);
-            gameLoopLogic = new GameLoopLogic(content, graphics, boundary);
+            gameLoopLogic = new GameLoopLogic(content, graphics, boundary, big1, big2, big3, big4);
 
             gameLoopLogic.players.Add(new Player(ControlType.GamePlay, PlayerIndex.One, content, graphics, this.currentGameState));
             gameLoopLogic.players.Add(new Player(ControlType.GamePlay, PlayerIndex.Two, content, graphics, this.currentGameState));
             gameClock = new GameClock(graphics, content);
             active = true;
+
+            
         }
         public void CharacterChoices(int choice1, int choice2)
         {

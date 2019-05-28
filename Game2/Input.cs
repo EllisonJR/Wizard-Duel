@@ -50,6 +50,7 @@ namespace WizardDuel
         int pauseTimer;
 
         public bool slowed;
+        public bool incapped;
         
         public Input(ControlType controlType, PlayerIndex playerIndex, bool AI)
         {
@@ -57,6 +58,7 @@ namespace WizardDuel
             this.playerIndex = playerIndex;
             this.AI = AI;
             slowed = false;
+            incapped = false;
             oldState = new GamePadState();
             newState = new GamePadState();
             leftJoyStick = new GamePadState();
@@ -159,35 +161,79 @@ namespace WizardDuel
             {
                 reflected += gameTime.ElapsedGameTime.Milliseconds;
                 reflectTimer += gameTime.ElapsedGameTime.Milliseconds;
-                if (reflected <= 300)
+                if (incapped == false)
                 {
-                    inputAction = InputAction.Reflect;
-                }
-                else if (dashed <= 450 && slowed == false)
-                {
-                    if (inputAction == InputAction.DashLeft)
+                    if (reflected <= 300)
                     {
-                        dashed += gameTime.ElapsedGameTime.Milliseconds;
-                        if (dashed >= 450)
+                        inputAction = InputAction.Reflect;
+                    }
+                    else if (dashed <= 450 && slowed == false)
+                    {
+                        if (inputAction == InputAction.DashLeft)
                         {
-                            if (oldKBState.IsKeyUp(Keys.W) && newKBState.IsKeyDown(Keys.W))
+                            dashed += gameTime.ElapsedGameTime.Milliseconds;
+                            if (dashed >= 450)
                             {
-                                inputAction = InputAction.Reflect;
-                                reflectTimer = 0;
-                                reflected = 0;
+                                if (oldKBState.IsKeyUp(Keys.W) && newKBState.IsKeyDown(Keys.W))
+                                {
+                                    inputAction = InputAction.Reflect;
+                                    reflectTimer = 0;
+                                    reflected = 0;
+                                }
+                                else
+                                {
+                                    inputAction = InputAction.None;
+                                }
                             }
-                            else
+                        }
+                        if (inputAction == InputAction.DashRight)
+                        {
+                            dashed += gameTime.ElapsedGameTime.Milliseconds;
+                            if (dashed >= 450)
                             {
-                                inputAction = InputAction.None;
+                                if (oldKBState.IsKeyUp(Keys.W) && newKBState.IsKeyDown(Keys.W))
+                                {
+                                    inputAction = InputAction.Reflect;
+                                    reflectTimer = 0;
+                                    reflected = 0;
+                                }
+                                else
+                                {
+                                    inputAction = InputAction.None;
+                                }
                             }
                         }
                     }
-                    if (inputAction == InputAction.DashRight)
+                    else
                     {
-                        dashed += gameTime.ElapsedGameTime.Milliseconds;
-                        if (dashed >= 450)
+                        if (inputAction == InputAction.ChargeShot || inputAction == InputAction.Shoot)
                         {
-                            if (oldKBState.IsKeyUp(Keys.W) && newKBState.IsKeyDown(Keys.W))
+                            inputAction = InputAction.None;
+                            chargeTimer = 0;
+                            shootingAngle = 0;
+                        }
+                        else if (newMouseState.LeftButton == ButtonState.Pressed && oldMouseState.LeftButton == ButtonState.Pressed && chargeTimer <= 1000)
+                        {
+                            chargeTimer += gameTime.ElapsedGameTime.Milliseconds;
+                            inputAction = InputAction.Charge;
+                            CalculateShootingAngle();
+                        }
+                        else if (newMouseState.LeftButton == ButtonState.Pressed && oldMouseState.LeftButton == ButtonState.Pressed && chargeTimer > 1000)
+                        {
+                            inputAction = InputAction.ChargeShotReady;
+                            CalculateShootingAngle();
+                        }
+                        else if (newMouseState.LeftButton == ButtonState.Released && oldMouseState.LeftButton == ButtonState.Pressed && chargeTimer < 1000)
+                        {
+                            inputAction = InputAction.Shoot;
+                        }
+                        else if (newMouseState.LeftButton == ButtonState.Released && oldMouseState.LeftButton == ButtonState.Pressed && chargeTimer > 1000)
+                        {
+                            inputAction = InputAction.ChargeShot;
+                        }
+                        else if (oldKBState.IsKeyUp(Keys.W) && newKBState.IsKeyDown(Keys.W))
+                        {
+                            if (reflectTimer >= 400)
                             {
                                 inputAction = InputAction.Reflect;
                                 reflectTimer = 0;
@@ -195,73 +241,36 @@ namespace WizardDuel
                             }
                             else
                             {
-                                inputAction = InputAction.None;
+
                             }
+                        }
+                        else if (newKBState.IsKeyDown(Keys.A) && oldMouseState.RightButton == ButtonState.Pressed && slowed == false)
+                        {
+                            inputAction = InputAction.DashLeft;
+                            dashed = 0;
+                        }
+                        else if (newKBState.IsKeyDown(Keys.A))
+                        {
+                            inputAction = InputAction.Left;
+                        }
+                        else if (newKBState.IsKeyDown(Keys.D) && oldMouseState.RightButton == ButtonState.Pressed && slowed == false)
+                        {
+                            inputAction = InputAction.DashRight;
+                            dashed = 0;
+                        }
+                        else if (newKBState.IsKeyDown(Keys.D))
+                        {
+                            inputAction = InputAction.Right;
+                        }
+                        else
+                        {
+                            inputAction = InputAction.None;
                         }
                     }
                 }
                 else
                 {
-                    if (inputAction == InputAction.ChargeShot || inputAction == InputAction.Shoot)
-                    {
-                        inputAction = InputAction.None;
-                        chargeTimer = 0;
-                        shootingAngle = 0;
-                    }
-                    else if (newMouseState.LeftButton == ButtonState.Pressed && oldMouseState.LeftButton == ButtonState.Pressed && chargeTimer <= 1000)
-                    {
-                        chargeTimer += gameTime.ElapsedGameTime.Milliseconds;
-                        inputAction = InputAction.Charge;
-                        CalculateShootingAngle();
-                    }
-                    else if (newMouseState.LeftButton == ButtonState.Pressed && oldMouseState.LeftButton == ButtonState.Pressed && chargeTimer > 1000)
-                    {
-                        inputAction = InputAction.ChargeShotReady;
-                        CalculateShootingAngle();
-                    }
-                    else if (newMouseState.LeftButton == ButtonState.Released && oldMouseState.LeftButton == ButtonState.Pressed && chargeTimer < 1000)
-                    {
-                        inputAction = InputAction.Shoot;
-                    }
-                    else if (newMouseState.LeftButton == ButtonState.Released && oldMouseState.LeftButton == ButtonState.Pressed && chargeTimer > 1000)
-                    {
-                        inputAction = InputAction.ChargeShot;
-                    }
-                    else if (oldKBState.IsKeyUp(Keys.W) && newKBState.IsKeyDown(Keys.W))
-                    {
-                        if (reflectTimer >= 400)
-                        {
-                            inputAction = InputAction.Reflect;
-                            reflectTimer = 0;
-                            reflected = 0;
-                        }
-                        else
-                        {
-
-                        }
-                    }
-                    else if (newKBState.IsKeyDown(Keys.A) && oldMouseState.RightButton == ButtonState.Pressed && slowed == false)
-                    {
-                        inputAction = InputAction.DashLeft;
-                        dashed = 0;
-                    }
-                    else if (newKBState.IsKeyDown(Keys.A))
-                    {
-                        inputAction = InputAction.Left;
-                    }
-                    else if (newKBState.IsKeyDown(Keys.D) && oldMouseState.RightButton == ButtonState.Pressed && slowed == false)
-                    {
-                        inputAction = InputAction.DashRight;
-                        dashed = 0;
-                    }
-                    else if (newKBState.IsKeyDown(Keys.D))
-                    {
-                        inputAction = InputAction.Right;
-                    }
-                    else
-                    {
-                        inputAction = InputAction.None;
-                    }
+                    inputAction = InputAction.None;
                 }
             }
         }
@@ -336,35 +345,79 @@ namespace WizardDuel
             {
                 reflected += gameTime.ElapsedGameTime.Milliseconds;
                 reflectTimer += gameTime.ElapsedGameTime.Milliseconds;
-                if (reflected <= 300)
+                if (incapped == false)
                 {
-                    inputAction = InputAction.Reflect;
-                }
-                else if (dashed <= 450)
-                {
-                    if (inputAction == InputAction.DashLeft)
+                    if (reflected <= 300)
                     {
-                        dashed += gameTime.ElapsedGameTime.Milliseconds;
-                        if (dashed >= 450)
+                        inputAction = InputAction.Reflect;
+                    }
+                    else if (dashed <= 450)
+                    {
+                        if (inputAction == InputAction.DashLeft)
                         {
-                            if (oldState.Buttons.Y == ButtonState.Pressed && newState.Buttons.Y == ButtonState.Pressed)
+                            dashed += gameTime.ElapsedGameTime.Milliseconds;
+                            if (dashed >= 450)
                             {
-                                inputAction = InputAction.Reflect;
-                                reflectTimer = 0;
-                                reflected = 0;
+                                if (oldState.Buttons.Y == ButtonState.Pressed && newState.Buttons.Y == ButtonState.Pressed)
+                                {
+                                    inputAction = InputAction.Reflect;
+                                    reflectTimer = 0;
+                                    reflected = 0;
+                                }
+                                else
+                                {
+                                    inputAction = InputAction.None;
+                                }
                             }
-                            else
+                        }
+                        if (inputAction == InputAction.DashRight)
+                        {
+                            dashed += gameTime.ElapsedGameTime.Milliseconds;
+                            if (dashed >= 450)
                             {
-                                inputAction = InputAction.None;
+                                if (oldState.Buttons.Y == ButtonState.Pressed && newState.Buttons.Y == ButtonState.Pressed)
+                                {
+                                    inputAction = InputAction.Reflect;
+                                    reflectTimer = 0;
+                                    reflected = 0;
+                                }
+                                else
+                                {
+                                    inputAction = InputAction.None;
+                                }
                             }
                         }
                     }
-                    if (inputAction == InputAction.DashRight)
+                    else
                     {
-                        dashed += gameTime.ElapsedGameTime.Milliseconds;
-                        if (dashed >= 450)
+                        if (inputAction == InputAction.ChargeShot || inputAction == InputAction.Shoot)
                         {
-                            if (oldState.Buttons.Y == ButtonState.Pressed && newState.Buttons.Y == ButtonState.Pressed)
+                            inputAction = InputAction.None;
+                            chargeTimer = 0;
+                            shootingAngle = 0;
+                        }
+                        else if (oldState.Triggers.Right == 1 && newState.Triggers.Right == 1 && chargeTimer <= 1000)
+                        {
+                            chargeTimer += gameTime.ElapsedGameTime.Milliseconds;
+                            inputAction = InputAction.Charge;
+                            CalculateShootingAngle();
+                        }
+                        else if (oldState.Triggers.Right == 1 && newState.Triggers.Right == 1 && chargeTimer > 1000)
+                        {
+                            inputAction = InputAction.ChargeShotReady;
+                            CalculateShootingAngle();
+                        }
+                        else if (oldState.Triggers.Right == 1 && newState.Triggers.Right < 1 && chargeTimer < 1000)
+                        {
+                            inputAction = InputAction.Shoot;
+                        }
+                        else if (oldState.Triggers.Right == 1 && newState.Triggers.Right < 1 && chargeTimer > 1000)
+                        {
+                            inputAction = InputAction.ChargeShot;
+                        }
+                        else if (oldState.Buttons.Y == ButtonState.Released && newState.Buttons.Y == ButtonState.Pressed)
+                        {
+                            if (reflectTimer >= 400)
                             {
                                 inputAction = InputAction.Reflect;
                                 reflectTimer = 0;
@@ -372,73 +425,36 @@ namespace WizardDuel
                             }
                             else
                             {
-                                inputAction = InputAction.None;
+
                             }
+                        }
+                        else if (newState.Buttons.A == ButtonState.Pressed && oldState.Buttons.A == ButtonState.Released && leftJoyStick.ThumbSticks.Left.X < -.3f)
+                        {
+                            inputAction = InputAction.DashLeft;
+                            dashed = 0;
+                        }
+                        else if (leftJoyStick.ThumbSticks.Left.X < -.3f)
+                        {
+                            inputAction = InputAction.Left;
+                        }
+                        else if (newState.Buttons.A == ButtonState.Pressed && oldState.Buttons.A == ButtonState.Released && leftJoyStick.ThumbSticks.Left.X > .3f)
+                        {
+                            inputAction = InputAction.DashRight;
+                            dashed = 0;
+                        }
+                        else if (leftJoyStick.ThumbSticks.Left.X >= .3f)
+                        {
+                            inputAction = InputAction.Right;
+                        }
+                        else
+                        {
+                            inputAction = InputAction.None;
                         }
                     }
                 }
                 else
                 {
-                    if (inputAction == InputAction.ChargeShot || inputAction == InputAction.Shoot)
-                    {
-                        inputAction = InputAction.None;
-                        chargeTimer = 0;
-                        shootingAngle = 0;
-                    }
-                    else if (oldState.Triggers.Right == 1 && newState.Triggers.Right == 1 && chargeTimer <= 1000)
-                    {
-                        chargeTimer += gameTime.ElapsedGameTime.Milliseconds;
-                        inputAction = InputAction.Charge;
-                        CalculateShootingAngle();
-                    }
-                    else if (oldState.Triggers.Right == 1 && newState.Triggers.Right == 1 && chargeTimer > 1000)
-                    {
-                        inputAction = InputAction.ChargeShotReady;
-                        CalculateShootingAngle();
-                    }
-                    else if (oldState.Triggers.Right == 1 && newState.Triggers.Right < 1 && chargeTimer < 1000)
-                    {
-                        inputAction = InputAction.Shoot;
-                    }
-                    else if (oldState.Triggers.Right == 1 && newState.Triggers.Right < 1 && chargeTimer > 1000)
-                    {
-                        inputAction = InputAction.ChargeShot;
-                    }
-                    else if (oldState.Buttons.Y == ButtonState.Released && newState.Buttons.Y == ButtonState.Pressed)
-                    {
-                        if (reflectTimer >= 400)
-                        {
-                            inputAction = InputAction.Reflect;
-                            reflectTimer = 0;
-                            reflected = 0;
-                        }
-                        else
-                        {
-
-                        }
-                    }
-                    else if (newState.Buttons.A == ButtonState.Pressed && oldState.Buttons.A == ButtonState.Released && leftJoyStick.ThumbSticks.Left.X < -.3f)
-                    {
-                        inputAction = InputAction.DashLeft;
-                        dashed = 0;
-                    }
-                    else if (leftJoyStick.ThumbSticks.Left.X < -.3f)
-                    {
-                        inputAction = InputAction.Left;
-                    }
-                    else if (newState.Buttons.A == ButtonState.Pressed && oldState.Buttons.A == ButtonState.Released && leftJoyStick.ThumbSticks.Left.X > .3f)
-                    {
-                        inputAction = InputAction.DashRight;
-                        dashed = 0;
-                    }
-                    else if (leftJoyStick.ThumbSticks.Left.X >= .3f)
-                    {
-                        inputAction = InputAction.Right;
-                    }
-                    else
-                    {
-                        inputAction = InputAction.None;
-                    }
+                    inputAction = InputAction.None;
                 }
             }
         }

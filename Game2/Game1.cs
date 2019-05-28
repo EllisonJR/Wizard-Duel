@@ -31,6 +31,14 @@ namespace WizardDuel
 
         SpriteFont font;
 
+        Texture2D bigExplodeT1;
+        Texture2D bigExplodeT2;
+        Texture2D bigExplodeT3;
+        Texture2D bigExplodeT4;
+
+
+        bool bigTexturesLoading;
+
         bool importedChoices;
 
         public WizardDuel()
@@ -41,15 +49,21 @@ namespace WizardDuel
             graphics.PreferredBackBufferHeight = 600;
             graphics.PreferredBackBufferWidth = 400;
             IsMouseVisible = true;
+            bigTexturesLoading = true;
         }
 
         protected override void Initialize()
         {
+            bigExplodeT1 = Content.Load<Texture2D>("sprites/player effects/multichargeimpactone");
+            bigExplodeT2 = Content.Load<Texture2D>("sprites/player effects/multichargeimpacttwo");
+            bigExplodeT3 = Content.Load<Texture2D>("sprites/player effects/multichargeimpactthree");
+            bigExplodeT4 = Content.Load<Texture2D>("sprites/player effects/multichargeimpactfour");
+
             currentGameState = GameStates.MainMenu;
             menu = new MainMenu(currentGameState, Content, graphics);
-            multiPlayer = new Multiplayer(currentGameState, Content, graphics);
+            multiPlayer = new Multiplayer(currentGameState, Content, graphics, bigExplodeT1, bigExplodeT2, bigExplodeT3, bigExplodeT4);
             controlInfoScreen = new ControlInfoScreen(currentGameState, Content, graphics);
-            singlePlayer = new SinglePlayer(currentGameState, Content, graphics);
+            singlePlayer = new SinglePlayer(currentGameState, Content, graphics, bigExplodeT1, bigExplodeT2, bigExplodeT3, bigExplodeT4);
             playerSelect = new PlayererSelect(currentGameState, Content, graphics);
 
             base.Initialize();
@@ -60,7 +74,6 @@ namespace WizardDuel
         {
             spriteBatch = new SpriteBatch(GraphicsDevice);
             font = Content.Load<SpriteFont>("fonts/gameclock");
-
             switch (currentGameState)
             {
                 case GameStates.MultiPlayer:

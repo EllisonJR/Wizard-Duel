@@ -78,6 +78,7 @@
     <Compile Include="Animation.cs" />
     <Compile Include="Boundary.cs" />
     <Compile Include="CharacterAdjuster.cs" />
+    <Compile Include="EndGameSequence.cs" />
     <Compile Include="FireballImpact.cs" />
     <Compile Include="Game1.cs" />
     <Compile Include="GameClock.cs" />

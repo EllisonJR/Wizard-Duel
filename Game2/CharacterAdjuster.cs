@@ -31,6 +31,7 @@ namespace WizardDuel
         bool stunned;
         bool slowed;
         bool slept;
+        bool incapped;
 
         ImpactLocations impactLocation;
 
@@ -40,13 +41,15 @@ namespace WizardDuel
             this.graphics = graphics;
             stunned = false;
             slowed = false;
+            slept = false;
+            incapped = false;
             impactLocation = ImpactLocations.None;
         }
         public int PassInFrame()
         {
             return currentFrame;
         }
-        public void GrabInput(InputAction inputAction, PlayerIndex playerIndex, int speed, bool stunned, bool slowed, bool slept,ImpactLocations impactLocation)
+        public void GrabInput(InputAction inputAction, PlayerIndex playerIndex, int speed, bool stunned, bool slowed, bool slept, bool incapped, ImpactLocations impactLocation)
         {
             this.playerIndex = playerIndex;
             this.inputAction = inputAction;
@@ -54,6 +57,7 @@ namespace WizardDuel
             this.stunned = stunned;
             this.slowed = slowed;
             this.slept = slept;
+            this.incapped = incapped;
             this.impactLocation = impactLocation;
         }
         public void PassInCharacter(int character)
@@ -63,7 +67,7 @@ namespace WizardDuel
         public void UpdateCharacter(GameTime gameTime)
         {
             frameTimer += gameTime.ElapsedGameTime.Milliseconds;
-            if (stunned == false && slept == false)
+            if (stunned == false && slept == false && incapped == false)
             {
                 if (character == 1)
                 {
@@ -74,22 +78,25 @@ namespace WizardDuel
                     TiredWizard();
                 }
             }
-            else if(stunned == true || slept == true)
+            else if(stunned == true || slept == true || incapped == true)
             {
                 if (frameTimer >= frameTime)
                 {
-                    currentFrame++;
-                    frameTimer = 0;
+                    if (incapped == false)
+                    {
+                        currentFrame++;
+                        frameTimer = 0;
+                    }
                 }
                 if (character == 1)
                 {
-                    if (impactLocation == ImpactLocations.LeftImpact)
+                    if (impactLocation == ImpactLocations.LeftImpact && incapped == false)
                     {
                         if (currentFrame == 0 || currentFrame >= 1 && currentFrame <= 4 || currentFrame >= 10 && currentFrame <= 18)
                         {
                             currentFrame = 72;
                         }
-                        else if (currentFrame == 9 || currentFrame >= 5 && currentFrame <= 8 || currentFrame >= 19 && currentFrame <= 27)
+                        if (currentFrame == 9 || currentFrame >= 5 && currentFrame <= 8 || currentFrame >= 19 && currentFrame <= 27)
                         {
                             currentFrame = 82;
                         }
@@ -98,13 +105,13 @@ namespace WizardDuel
                             currentFrame = 72;
                         }
                     }
-                    else if (impactLocation == ImpactLocations.RightImpact)
+                    else if (impactLocation == ImpactLocations.RightImpact && incapped == false)
                     {
                         if (currentFrame == 0 || currentFrame >= 1 && currentFrame <= 4 || currentFrame >= 10 && currentFrame <= 18)
                         {
                             currentFrame = 92;
                         }
-                        else if (currentFrame == 9 || currentFrame >= 5 && currentFrame <= 8 || currentFrame >= 19 && currentFrame <= 27)
+                        if (currentFrame == 9 || currentFrame >= 5 && currentFrame <= 8 || currentFrame >= 19 && currentFrame <= 27)
                         {
                             currentFrame = 98;
                         }
@@ -113,7 +120,7 @@ namespace WizardDuel
                             currentFrame = 92;
                         }
                     }
-                    if (stunned == true)
+                    else if (stunned == true)
                     {
                         if (currentFrame == 81)
                         {
@@ -132,41 +139,89 @@ namespace WizardDuel
                             currentFrame = 89;
                         }
                     }
-                    if(slept == true)
+                    else if(slept == true)
                     {
-
+                        if(currentFrame == 97)
+                        {
+                            currentFrame = 104;
+                        }
+                        if(currentFrame == 103)
+                        {
+                            currentFrame = 111;
+                        }
+                        if(currentFrame == 110)
+                        {
+                            currentFrame = 104;
+                        }
+                        if(currentFrame == 117)
+                        {
+                            currentFrame = 111;
+                        }
+                        if(currentFrame == 77)
+                        {
+                            currentFrame = 104;
+                        }
+                        if(currentFrame == 87)
+                        {
+                            currentFrame = 111;
+                        }
+                    }
+                    else if (incapped == true)
+                    {
+                        if (currentFrame >= 0 && currentFrame <= 4 || currentFrame >= 10 && currentFrame <= 18)
+                        {
+                            currentFrame = 68;
+                        }
+                        if (currentFrame >= 5 && currentFrame <= 9 || currentFrame >= 19 && currentFrame <= 27)
+                        {
+                            currentFrame = 70;
+                        }
+                        if(currentFrame == 68)
+                        {
+                            currentFrame = 68;
+                        }
+                        if(currentFrame == 70)
+                        {
+                            currentFrame = 70;
+                        }
                     }
                 }
                 if(character == 2)
                 {
                     if (impactLocation == ImpactLocations.LeftImpact)
                     {
-                        if (currentFrame == 0 || currentFrame >= 12 && currentFrame <= 21 || currentFrame >= 77 && currentFrame <= 90)
+                        if (slept == true || stunned == true)
                         {
-                            currentFrame = 101;
-                        }
-                        else if (currentFrame == 1 || currentFrame >= 2 && currentFrame <= 11 || currentFrame >= 63 && currentFrame <= 76)
-                        {
-                            currentFrame = 110;
-                        }
-                        else
-                        {
-                            currentFrame = 110;
+                            if (currentFrame == 0 || currentFrame >= 12 && currentFrame <= 21 || currentFrame >= 77 && currentFrame <= 90)
+                            {
+                                currentFrame = 101;
+                            }
+                            if (currentFrame == 1 || currentFrame >= 2 && currentFrame <= 11 || currentFrame >= 63 && currentFrame <= 76)
+                            {
+                                currentFrame = 110;
+                            }
+                            else
+                            {
+                                currentFrame = 110;
+                            }
                         }
                     }
                     else if(impactLocation == ImpactLocations.RightImpact)
                     {
-                        if (currentFrame == 0 || currentFrame >= 12 && currentFrame <= 21 || currentFrame >= 77 && currentFrame <= 90)
+                        if (slept == true || stunned == true)
                         {
-                            currentFrame = 116;
-                        }
-                        else if (currentFrame == 1 || currentFrame >= 2 && currentFrame <= 11 || currentFrame >= 63 && currentFrame <= 76)
-                        {
-                            currentFrame = 92;
-                        }
-                        else
-                        {
-                            currentFrame = 92;
+                            if (currentFrame == 0 || currentFrame >= 12 && currentFrame <= 21 || currentFrame >= 77 && currentFrame <= 90)
+                            {
+                                currentFrame = 116;
+                            }
+                            if (currentFrame == 1 || currentFrame >= 2 && currentFrame <= 11 || currentFrame >= 63 && currentFrame <= 76)
+                            {
+                                currentFrame = 92;
+                            }
+                            else
+                            {
+                                currentFrame = 92;
+                            }
                         }
                     }
                     if (stunned == true)
@@ -225,6 +280,25 @@ namespace WizardDuel
                         if(currentFrame == 124)
                         {
                             currentFrame = 120;
+                        }
+                    }
+                    if (incapped == true)
+                    {
+                        if (currentFrame == 0 || currentFrame >= 12 && currentFrame <= 21 || currentFrame >= 77 && currentFrame <= 90)
+                        {
+                            currentFrame = 129;
+                        }
+                        if (currentFrame == 1 || currentFrame >= 2 && currentFrame <= 11 || currentFrame >= 63 && currentFrame <= 76)
+                        {
+                            currentFrame = 130;
+                        }
+                        if (currentFrame == 129)
+                        {
+                            currentFrame = 129;
+                        }
+                        if (currentFrame == 130)
+                        {
+                            currentFrame = 130;
                         }
                     }
                 }
@@ -485,7 +559,8 @@ namespace WizardDuel
                         }
                         if (currentFrame >= 51)
                         {
-                            currentFrame = 51;                        }
+                            currentFrame = 51;
+                        }
                     }
                     if (inputAction == InputAction.Charge)
                     {

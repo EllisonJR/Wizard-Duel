@@ -90,7 +90,28 @@ namespace WizardDuel
 
         public int stunTimer;
         public int sleepTimer;
-       
+
+        public int incapTimer;
+
+        Texture2D kickedUpDustT;
+        Vector2 kickedUpDustLocation;
+        Animation kickedUpDust;
+        Texture2D landingPoofT;
+        Vector2 landingPoofLocation;
+        Animation landingPoof;
+        Texture2D dashRightTrailT;
+        Texture2D dashLeftTrailT;
+        Texture2D dashRightTrailT2;
+        Texture2D dashLeftTrailT2;
+        Texture2D dashRightTrailT3;
+        Texture2D dashLeftTrailT3;
+        Texture2D dashRightTrailT4;
+        Texture2D dashLeftTrailT4;
+        List<Vector2> dashTrailLocations = new List<Vector2>();
+        List<Animation> dashTrails = new List<Animation>();
+
+        int dashTrailTimer;
+
         public Player(ControlType controlType, PlayerIndex playerIndex, ContentManager content, GraphicsDeviceManager graphics, GameStates gameState)
         {
             characterAdjuster = new CharacterAdjuster(content, graphics);
@@ -123,6 +144,22 @@ namespace WizardDuel
             stunnedEffectT = content.Load<Texture2D>("sprites/playerSprites/stuneffect");
             sleepEffectT = content.Load<Texture2D>("sprites/player effects/sleepeffect");
 
+            kickedUpDustT = content.Load<Texture2D>("sprites/player effects/dashstartparticles");
+            landingPoofT = content.Load<Texture2D>("sprites/player effects/dash landing particles");
+
+            dashRightTrailT = content.Load<Texture2D>("sprites/player effects/dashRightTrail");
+            dashLeftTrailT = content.Load<Texture2D>("sprites/player effects/dashLeftTrail");
+            dashRightTrailT2 = content.Load<Texture2D>("sprites/player effects/dashRightTrail2");
+            dashLeftTrailT2 = content.Load<Texture2D>("sprites/player effects/dashLeftTrail2");
+            dashRightTrailT3 = content.Load<Texture2D>("sprites/player effects/dashRightTrail3");
+            dashLeftTrailT3 = content.Load<Texture2D>("sprites/player effects/dashLeftTrail3");
+            dashRightTrailT4 = content.Load<Texture2D>("sprites/player effects/dashRightTrail4");
+            dashLeftTrailT4 = content.Load<Texture2D>("sprites/player effects/dashLeftTrail4");
+
+
+            kickedUpDust = new Animation(kickedUpDustT, 3, 8);
+            landingPoof = new Animation(landingPoofT, 3, 10);
+
             sleepEffect = new Animation(sleepEffectT, 1, 4);
             slowEffect = new Animation(slowEffectT, 2, 2);
             stunnedEffect = new Animation(stunnedEffectT, 2, 3);
@@ -134,7 +171,7 @@ namespace WizardDuel
             }
             if(playerChoice == 2)
             {
-                playerAnimations = new Animation(tiredSpriteT, 7, 20);
+                playerAnimations = new Animation(tiredSpriteT, 14, 10);
             }
 
             if (playerIndex == PlayerIndex.One)
@@ -159,7 +196,10 @@ namespace WizardDuel
             tiredreflectAnimation = new Animation(tiredReflectT, 3, 10);
             tiredreflectAnimation.currentFrame = -1;
             tiredreflectAnimation.frameTime = 75;
-            
+
+            kickedUpDust.currentFrame = -1;
+            landingPoof.currentFrame = -1;
+            kickedUpDust.frameTime = 25;
         }
         public void ResetPlayers(PlayerIndex playerIndex, int playerChoice)
         {
@@ -169,6 +209,7 @@ namespace WizardDuel
             stunned = false;
             slowed = false;
             impactLocation = ImpactLocations.None;
+            dashTrailTimer = 0;
             if (playerIndex == PlayerIndex.One)
             {
                 playerLocation = new Vector2((graphics.PreferredBackBufferWidth / 2) - (playerAnimations.width / 2), graphics.PreferredBackBufferHeight - playerAnimations.height + 13);
@@ -183,7 +224,7 @@ namespace WizardDuel
                 if (playerChoice == 2)
                 {
                     tiredreflectAnimation.currentFrame = -1;
-                    playerAnimations = new Animation(tiredSpriteT, 7, 20);
+                    playerAnimations = new Animation(tiredSpriteT, 14, 10);
                     hitBox = new Rectangle((int)playerLocation.X + (playerAnimations.width / 2) - tiredHitboxT.Width / 2, ((int)playerLocation.Y + playerAnimations.height / 2) - 19, tiredHitboxT.Width, tiredHitboxT.Height);
                     reflectHitBox = new Rectangle((int)playerLocation.X + (playerAnimations.width / 2) - tiredReflectBoxT.Width / 2, (int)playerLocation.Y, tiredReflectBoxT.Width, tiredReflectBoxT.Height);
                 }
@@ -203,7 +244,7 @@ namespace WizardDuel
                 if (playerChoice == 2)
                 {
                     tiredreflectAnimation.currentFrame = -1;
-                    playerAnimations = new Animation(tiredSpriteT, 7, 20);
+                    playerAnimations = new Animation(tiredSpriteT, 14, 10);
                     hitBox = new Rectangle((int)playerLocation.X + (playerAnimations.width / 2) - tiredHitboxT.Width / 2, (int)playerLocation.Y + (playerAnimations.height / 2) - tiredHitboxT.Height / 2 + 7, tiredHitboxT.Width, tiredHitboxT.Height);
                     reflectHitBox = new Rectangle((int)playerLocation.X + (playerAnimations.width / 2) - tiredReflectBoxT.Width / 2, (int)playerLocation.Y + playerAnimations.height - 30, tiredReflectBoxT.Width, tiredReflectBoxT.Height);
                 }
@@ -218,6 +259,9 @@ namespace WizardDuel
             slowLocation = new Vector2(hitBox.Center.X - slowEffect.width / 2, hitBox.Center.Y - slowEffect.height / 2);
             stunnedLocation = new Vector2(playerAnimations.width / 2 - stunnedEffect.width / 2, hitBox.Top - 20);
             sleepLocation = new Vector2(stunnedLocation.X, stunnedLocation.Y - 15);
+            kickedUpDust.currentFrame = -1;
+            landingPoof.currentFrame = -1;
+            kickedUpDust.frameTime = 25;
             input.inputAction = InputAction.None;
             inputAction = InputAction.None;
         }
@@ -229,12 +273,16 @@ namespace WizardDuel
         {
             previousInputAction = inputAction;
             characterAdjuster.UpdateCharacter(gameTime); 
-            characterAdjuster.GrabInput(inputAction, playerIndex, playerSpeed, stunned, slowed, slept, impactLocation);
+            characterAdjuster.GrabInput(inputAction, playerIndex, playerSpeed, stunned, slowed, slept, incapped, impactLocation);
             playerAnimations.currentFrame = characterAdjuster.PassInFrame();
+
+            DashEffects(gameTime);
+            UpdateDashEffects(gameTime);
 
             StatusEffects(gameTime);
 
             input.slowed = slowed;
+            input.incapped = incapped;
             if (AI == false)
             {
                 angle = input.ReturnAngle();
@@ -243,7 +291,14 @@ namespace WizardDuel
                     input.Update(gameTime);
                 }
                 ShotMeter();
-                inputAction = input.inputAction;
+                if (incapped == false)
+                {
+                    inputAction = input.inputAction;
+                }
+                else if(incapped == true)
+                {
+                    inputAction = InputAction.None;
+                }
                 PlayerMovement(gameTime);
                 CalculateRotationOrigin();
                 CalculateProjectileOriginAndDirection();
@@ -297,18 +352,40 @@ namespace WizardDuel
         }
         public void Draw(SpriteBatch spriteBatch)
         {
+            DrawDashEffects(spriteBatch);
             if (playerChoice == 1)
             {
                 //spriteBatch.Draw(buffHitboxT, hitBox, Color.White);
                 //spriteBatch.Draw(buffReflectBoxT, reflectHitBox, Color.White);
             }
-            if(playerChoice == 2)
+            if (playerChoice == 2)
             {
                 //spriteBatch.Draw(tiredHitboxT, hitBox, Color.White);
                 //spriteBatch.Draw(tiredReflectBoxT, reflectHitBox, Color.White);
             }
+            if (incapped == false)
+            {
+                playerAnimations.Draw(spriteBatch, playerLocation);
+            }
+            else if (incapped == true)
+            {
+                if (incapTimer >= 0 && incapTimer <= 99)
+                {
+                    playerAnimations.Draw(spriteBatch, playerLocation);
+                }
+                if (incapTimer >= 100 && incapTimer <= 199)
+                {
 
-            playerAnimations.Draw(spriteBatch, playerLocation);
+                }
+                if (incapTimer >= 200 && incapTimer <= 299)
+                {
+                    playerAnimations.Draw(spriteBatch, playerLocation);
+                }
+                if (incapTimer >= 300 && incapTimer <= 499)
+                {
+
+                }
+            }
             if (playerChoice == 2)
             {
                 if (playerIndex == PlayerIndex.One)
@@ -318,7 +395,7 @@ namespace WizardDuel
                         tiredreflectAnimation.Draw(spriteBatch, new Vector2(reflectHitBox.X - 18, reflectHitBox.Y - 15));
                     }
                 }
-                if(playerIndex == PlayerIndex.Two)
+                if (playerIndex == PlayerIndex.Two)
                 {
                     if (tiredreflectAnimation.currentFrame >= 0)
                     {
@@ -326,7 +403,7 @@ namespace WizardDuel
                     }
                 }
             }
-            if(inputAction == InputAction.Charge || inputAction == InputAction.ChargeShotReady)
+            if (inputAction == InputAction.Charge || inputAction == InputAction.ChargeShotReady)
             {
                 spriteBatch.Draw(playerRetical, reticalLocation, null, Color.White, angle, rotationOrigin, 1f, SpriteEffects.None, 1f);
             }
@@ -334,7 +411,7 @@ namespace WizardDuel
             {
 
             }
-            if(slowed == true)
+            if (slowed == true)
             {
                 slowEffect.Draw(spriteBatch, slowLocation);
             }
@@ -342,12 +419,199 @@ namespace WizardDuel
             {
                 stunnedEffect.Draw(spriteBatch, stunnedLocation);
             }
-            if(slept == true && playerChoice == 2 && playerAnimations.currentFrame >= 120 && playerAnimations.currentFrame <= 123 || slept == true && playerChoice == 2 && playerAnimations.currentFrame >= 125 && playerAnimations.currentFrame <= 128)
+            if (slept == true && playerChoice == 2 && playerAnimations.currentFrame >= 120 && playerAnimations.currentFrame <= 123 || slept == true && playerChoice == 2 && playerAnimations.currentFrame >= 125 && playerAnimations.currentFrame <= 128)
             {
-                //add conditional for buffwizard
+                sleepEffect.Draw(spriteBatch, sleepLocation);
+            }
+            if (slept == true && playerChoice == 1 && playerAnimations.currentFrame >= 104 && playerAnimations.currentFrame <= 109 || slept == true && playerChoice == 1 && playerAnimations.currentFrame >= 111 && playerAnimations.currentFrame <= 116)
+            {
                 sleepEffect.Draw(spriteBatch, sleepLocation);
             }
             spriteBatch.Draw(shotMeterTexture, new Rectangle((int)shotMeterLocation.X, (int)shotMeterLocation.Y, (int)shotMeterCounter, 2), Color.White);
+        }
+        public void DashEffects(GameTime gameTime)
+        {
+            DashTrailLogic(gameTime);
+            if(inputAction == InputAction.DashRight)
+            {
+                if (playerChoice == 1)
+                {
+                    if (playerAnimations.currentFrame == 10)
+                    {
+                        kickedUpDustLocation.X = hitBox.Left - kickedUpDust.width;
+                        kickedUpDustLocation.Y = hitBox.Bottom - kickedUpDust.height - 5;
+                        kickedUpDust.currentFrame = 0;
+                    }
+                }
+                if (playerChoice == 2)
+                {
+                    if (playerAnimations.currentFrame == 63 && playerSpeed == 20)
+                    {
+                        kickedUpDustLocation.X = hitBox.Left - kickedUpDust.width;
+                        kickedUpDustLocation.Y = hitBox.Bottom - kickedUpDust.height - 5;
+                        kickedUpDust.currentFrame = 0;
+                    }
+                }
+            }
+            if(inputAction == InputAction.DashLeft)
+            {
+                if (playerChoice == 1)
+                {
+                    if (playerAnimations.currentFrame == 19)
+                    {
+                        kickedUpDustLocation.X = hitBox.Right;
+                        kickedUpDustLocation.Y = hitBox.Bottom - kickedUpDust.height - 5;
+                        kickedUpDust.currentFrame = 9;
+                    }
+                }
+                if (playerChoice == 2)
+                {
+                    if (playerAnimations.currentFrame == 77 && playerSpeed == 20)
+                    {
+                        kickedUpDustLocation.X = hitBox.Right;
+                        kickedUpDustLocation.Y = hitBox.Bottom - kickedUpDust.height - 5;
+                        kickedUpDust.currentFrame = 9;
+                    }
+                }
+            }
+            if (playerChoice == 1)
+            {
+                if (playerAnimations.currentFrame == 26)
+                {
+                    landingPoofLocation.X = playerAnimations.drawingLocation.X;
+                    landingPoofLocation.Y = playerAnimations.drawingLocation.Y + playerAnimations.height - 70;
+                    landingPoof.currentFrame = 7;
+                    landingPoof.frameTime = 50;
+                }
+                if (playerAnimations.currentFrame == 17)
+                {
+                    landingPoofLocation.X = playerAnimations.drawingLocation.X;
+                    landingPoofLocation.Y = playerAnimations.drawingLocation.Y + playerAnimations.height - 70;
+                    landingPoof.currentFrame = 0;
+                    landingPoof.frameTime = 50;
+                }
+            }
+            if (playerChoice == 2)
+            {
+                if (playerAnimations.currentFrame == 71)
+                {
+                    landingPoofLocation.X = playerAnimations.drawingLocation.X;
+                    landingPoofLocation.Y = playerAnimations.drawingLocation.Y + playerAnimations.height - 70;
+                    landingPoof.currentFrame = 21;
+                }
+                if(playerAnimations.currentFrame == 85)
+                {
+                    landingPoofLocation.X = playerAnimations.drawingLocation.X;
+                    landingPoofLocation.Y = playerAnimations.drawingLocation.Y + playerAnimations.height - 70;
+                    landingPoof.currentFrame = 14;
+                }
+            }
+        }
+        public void DashTrailLogic(GameTime gameTime)
+        {
+            dashTrailTimer += gameTime.ElapsedGameTime.Milliseconds;
+            if (dashTrailTimer >= 5 && input.dashed < 400 && input.dashed > 25)
+            {
+                Random random = new Random();
+                int randomAnim = random.Next(0, 5);
+                dashTrailTimer = 0;
+                if (inputAction == InputAction.DashRight)
+                {
+                    if (randomAnim == 0)
+                    {
+                        dashTrails.Add(new Animation(dashRightTrailT, 2, 4, 0, 50));
+                        dashTrailLocations.Add(new Vector2(hitBox.Center.X, hitBox.Bottom - 20));
+                    }
+                    if(randomAnim == 1)
+                    {
+                        dashTrails.Add(new Animation(dashRightTrailT2, 2, 4, 0, 50));
+                        dashTrailLocations.Add(new Vector2(hitBox.Center.X, hitBox.Bottom - 20));
+                    }
+                    if (randomAnim == 3)
+                    {
+                        dashTrails.Add(new Animation(dashRightTrailT3, 2, 4, 0, 50));
+                        dashTrailLocations.Add(new Vector2(hitBox.Center.X, hitBox.Bottom - 20));
+                    }
+                    if (randomAnim == 4)
+                    {
+                        dashTrails.Add(new Animation(dashRightTrailT4, 2, 4, 0, 50));
+                        dashTrailLocations.Add(new Vector2(hitBox.Center.X, hitBox.Bottom - 20));
+                    }
+                }
+                if (inputAction == InputAction.DashLeft)
+                {
+                    if (randomAnim == 0)
+                    {
+                        dashTrails.Add(new Animation(dashLeftTrailT, 2, 4, 0, 50));
+                        dashTrailLocations.Add(new Vector2(hitBox.Center.X, hitBox.Bottom - 20));
+                    }
+                    if (randomAnim == 1)
+                    {
+                        dashTrails.Add(new Animation(dashLeftTrailT2, 2, 4, 0, 50));
+                        dashTrailLocations.Add(new Vector2(hitBox.Center.X, hitBox.Bottom - 20));
+                    }
+                    if (randomAnim == 3)
+                    {
+                        dashTrails.Add(new Animation(dashLeftTrailT3, 2, 4, 0, 50));
+                        dashTrailLocations.Add(new Vector2(hitBox.Center.X, hitBox.Bottom - 20));
+                    }
+                    if (randomAnim == 4)
+                    {
+                        dashTrails.Add(new Animation(dashLeftTrailT4, 2, 4, 0, 50));
+                        dashTrailLocations.Add(new Vector2(hitBox.Center.X, hitBox.Bottom - 20));
+                    }
+                }
+            }
+        }
+        public void DrawDashEffects(SpriteBatch spriteBatch)
+        {
+            if (landingPoof.currentFrame != -1 && landingPoof.currentFrame != 6 && landingPoof.currentFrame != 13 && landingPoof.currentFrame != 20 && landingPoof.currentFrame != 27)
+            {
+                landingPoof.Draw(spriteBatch, landingPoofLocation);
+            }
+            if (kickedUpDust.currentFrame != -1 && kickedUpDust.currentFrame != 8 && kickedUpDust.currentFrame != 17)
+            {
+                kickedUpDust.Draw(spriteBatch, kickedUpDustLocation);
+            }
+            for(int i = 0; i < dashTrails.Count; i++)
+            {
+                dashTrails[i].Draw(spriteBatch, dashTrailLocations[i]);
+            }
+            for (int i = 0; i < dashTrails.Count; i++)
+            {
+                if (dashTrails[i].currentFrame == 7)
+                {
+                    dashTrailLocations.RemoveAt(i);
+                    dashTrails.RemoveAt(i--);
+                }
+            }
+        }
+        public void UpdateDashEffects(GameTime gameTime)
+        {
+            if (landingPoof.currentFrame != -1 && landingPoof.currentFrame != 6 && landingPoof.currentFrame != 13 && landingPoof.currentFrame != 20 && landingPoof.currentFrame != 27)
+            {
+                landingPoof.Update(gameTime);
+            }
+            if (kickedUpDust.currentFrame != -1 && kickedUpDust.currentFrame != 8 && kickedUpDust.currentFrame != 17)
+            {
+                kickedUpDust.Update(gameTime);
+            }
+
+            foreach(Animation dashTrail in dashTrails)
+            {
+                if (dashTrail.currentFrame != 7)
+                {
+                    dashTrail.Update(gameTime);
+                }
+            }
+            if(landingPoof.currentFrame >= 27)
+            {
+                landingPoof.currentFrame = -1;
+            }
+            if(kickedUpDust.currentFrame >= 17)
+            {
+                kickedUpDust.currentFrame = -1;
+            }
         }
         public void StatusEffects(GameTime gameTime)
         {
@@ -403,10 +667,40 @@ namespace WizardDuel
                     slept = false;
                 }
             }
+            if(incapped == true)
+            {
+                incapTimer += gameTime.ElapsedGameTime.Milliseconds;
+                if(incapTimer >= 500)
+                {
+                    incapped = false;
+                }
+                if (playerChoice == 1)
+                {
+                    if (playerAnimations.currentFrame == 68)
+                    {
+                        playerLocation.X -= .25f;
+                    }
+                    if (playerAnimations.currentFrame == 70)
+                    {
+                        playerLocation.X += .25f;
+                    }
+                }
+                if(playerChoice == 2)
+                {
+                    if (playerAnimations.currentFrame == 130)
+                    {
+                        playerLocation.X -= .25f;
+                    }
+                    if (playerAnimations.currentFrame == 129)
+                    {
+                        playerLocation.X += .25f;
+                    }
+                }
+            }
         }
         public void PlayerMovement(GameTime gameTime)
         {
-            if (slowed == false && stunned == false && slept == false)
+            if (slowed == false && stunned == false && slept == false && incapped == false)
             {
                 if (input.inputAction == InputAction.DashLeft || input.inputAction == InputAction.DashRight)
                 {
@@ -462,22 +756,25 @@ namespace WizardDuel
                     }
                 }
             }
-            
-            if (input.inputAction == InputAction.Left)
+
+            if (incapped == false)
             {
-                playerLocation.X -= playerSpeed;
-            }
-            else if (input.inputAction == InputAction.Right)
-            {
-                playerLocation.X += playerSpeed;
-            }
-            if (playerLocation.X + (playerAnimations.width / 2) + (hitBox.Width / 2) > graphics.PreferredBackBufferWidth - 25)
-            {
-                playerLocation.X = graphics.PreferredBackBufferWidth - 25 - (playerAnimations.width / 2) - (hitBox.Width / 2);
-            }
-            if (playerLocation.X + (playerAnimations.width / 2) - (hitBox.Width / 2) < 25)
-            {
-                playerLocation.X = 25 - (playerAnimations.width / 2) + (hitBox.Width / 2);
+                if (input.inputAction == InputAction.Left)
+                {
+                    playerLocation.X -= playerSpeed;
+                }
+                else if (input.inputAction == InputAction.Right)
+                {
+                    playerLocation.X += playerSpeed;
+                }
+                if (playerLocation.X + (playerAnimations.width / 2) + (hitBox.Width / 2) > graphics.PreferredBackBufferWidth - 25)
+                {
+                    playerLocation.X = graphics.PreferredBackBufferWidth - 25 - (playerAnimations.width / 2) - (hitBox.Width / 2);
+                }
+                if (playerLocation.X + (playerAnimations.width / 2) - (hitBox.Width / 2) < 25)
+                {
+                    playerLocation.X = 25 - (playerAnimations.width / 2) + (hitBox.Width / 2);
+                }
             }
             LockObjectstoPlayer();
         }

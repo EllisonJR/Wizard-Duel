@@ -18,6 +18,11 @@ namespace WizardDuel
         public List<Player> players = new List<Player>();
         public List<WallSegment> bricks = new List<WallSegment>();
 
+        public Texture2D impactT;
+        public Texture2D impactT2;
+        public Texture2D impactT3;
+        public Texture2D impactT4;
+
         AIcontroller aiController;
 
         ContentManager content;
@@ -59,8 +64,17 @@ namespace WizardDuel
 
         int spreadTimer;
 
-        public GameLoopLogic(ContentManager content, GraphicsDeviceManager graphics, Boundary boundary)
+        bool buffTiredExplode;
+        bool buffBuffExplode;
+        bool tiredTiredExplode;
+
+        bool chargeCheck;
+
+        bool endGame = false;
+
+        public GameLoopLogic(ContentManager content, GraphicsDeviceManager graphics, Boundary boundary, Texture2D big1, Texture2D big2, Texture2D big3, Texture2D big4)
         {
+            buffTiredExplode = false;
             this.content = content;
             this.graphics = graphics;
             this.boundary = boundary;
@@ -92,6 +106,11 @@ namespace WizardDuel
             multiChargeSpread = false;
 
             multiChargeSpreadLoc = new Vector2();
+
+            impactT = big1;
+            impactT2 = big2;
+            impactT3 = big3;
+            impactT4 = big4;
         }
         public void UpdateTransitions(GameTime gameTime)
         {
@@ -190,7 +209,7 @@ namespace WizardDuel
         public void ListChecks(GameTime gameTime)
         {
             
-            if (multiChargeSpread == true)
+            if (multiChargeSpread == true && buffTiredExplode == true)
             {
                 projectiles.Add(new Projectile(InputAction.ChargeShot, 1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.One, boundary.bounds, 2, true));
                 projectiles.Add(new Projectile(InputAction.ChargeShot, 0f, multiChargeSpreadLoc, content, graphics, PlayerIndex.One, boundary.bounds, 1, true));
@@ -199,8 +218,31 @@ namespace WizardDuel
                 projectiles.Add(new Projectile(InputAction.ChargeShot, 0f, multiChargeSpreadLoc, content, graphics, PlayerIndex.Two, boundary.bounds, 2, true));
                 projectiles.Add(new Projectile(InputAction.ChargeShot, -1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.Two, boundary.bounds, 2, true));
                 multiChargeSpread = false;
+                buffTiredExplode = false;
             }
-            
+            if (multiChargeSpread == true && buffBuffExplode == true)
+            {
+                projectiles.Add(new Projectile(InputAction.ChargeShot, 1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.One, boundary.bounds, 1, true));
+                projectiles.Add(new Projectile(InputAction.ChargeShot, 0f, multiChargeSpreadLoc, content, graphics, PlayerIndex.One, boundary.bounds, 1, true));
+                projectiles.Add(new Projectile(InputAction.ChargeShot, -1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.One, boundary.bounds, 1, true));
+                projectiles.Add(new Projectile(InputAction.ChargeShot, 1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.Two, boundary.bounds, 1, true));
+                projectiles.Add(new Projectile(InputAction.ChargeShot, 0f, multiChargeSpreadLoc, content, graphics, PlayerIndex.Two, boundary.bounds, 1, true));
+                projectiles.Add(new Projectile(InputAction.ChargeShot, -1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.Two, boundary.bounds, 1, true));
+                multiChargeSpread = false;
+                buffBuffExplode = false;
+            }
+            if (multiChargeSpread == true && tiredTiredExplode == true)
+            {
+                projectiles.Add(new Projectile(InputAction.ChargeShot, 1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.One, boundary.bounds, 2, true));
+                projectiles.Add(new Projectile(InputAction.ChargeShot, 0f, multiChargeSpreadLoc, content, graphics, PlayerIndex.One, boundary.bounds, 2, true));
+                projectiles.Add(new Projectile(InputAction.ChargeShot, -1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.One, boundary.bounds, 2, true));
+                projectiles.Add(new Projectile(InputAction.ChargeShot, 1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.Two, boundary.bounds, 2, true));
+                projectiles.Add(new Projectile(InputAction.ChargeShot, 0f, multiChargeSpreadLoc, content, graphics, PlayerIndex.Two, boundary.bounds, 2, true));
+                projectiles.Add(new Projectile(InputAction.ChargeShot, -1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.Two, boundary.bounds, 2, true));
+                multiChargeSpread = false;
+                tiredTiredExplode = false;
+            }
+
             boundary.Update(gameTime);
             boundary.GrabPorjectileLoc(projectiles);
             foreach(WallSegment brick in bricks)
@@ -265,17 +307,6 @@ namespace WizardDuel
                     {
                         projectile.Update(gameTime);
                         
-                        if (projectile.collisionLocation == CollidedWith.TopGoal || projectile.collisionLocation == CollidedWith.BottomGoal)
-                        {
-                            if (player.playerIndex == PlayerIndex.One)
-                            {
-                                player.score++;
-                            }
-                            if (player.playerIndex == PlayerIndex.Two)
-                            {
-                                player.score++;
-                            }
-                        }
                         if (projectile.bounds.Intersects(player.reflectHitBox))
                         {
                             if (player.playerChoice == 2)
@@ -339,7 +370,24 @@ namespace WizardDuel
                                             {
                                                 projectiles[i_].removalPing = true;
                                                 multiChargeSpreadLoc = projectiles[i].location;
-                                                fireballImpacts.Add(new FireballImpact(graphics, content, new Vector2(projectiles[i_].bounds.Center.X, projectiles[i_].bounds.Center.Y), projectiles[i_].originalOwner, projectiles[i_].chargeShot, false, 0, true));
+                                                fireballImpacts.Add(new FireballImpact(graphics, content, new Vector2(projectiles[i_].bounds.Center.X, projectiles[i_].bounds.Center.Y), projectiles[i_].originalOwner, projectiles[i_].chargeShot, false, 0, true, impactT, impactT2, impactT3, impactT4));
+                                                buffTiredExplode = true;
+                                                projectiles.RemoveAt(i--);
+                                            }
+                                            else if (projectiles[i].chargeShot == true && projectiles[i_].chargeShot == true && projectiles[i].originalOwner == 1 && projectiles[i_].originalOwner == 1)
+                                            {
+                                                projectiles[i_].removalPing = true;
+                                                multiChargeSpreadLoc = projectiles[i].location;
+                                                fireballImpacts.Add(new FireballImpact(graphics, content, new Vector2(projectiles[i_].bounds.Center.X, projectiles[i_].bounds.Center.Y), projectiles[i_].originalOwner, projectiles[i_].chargeShot, false, 0, true, impactT, impactT2, impactT3, impactT4));
+                                                buffBuffExplode = true;
+                                                projectiles.RemoveAt(i--);
+                                            }
+                                            else if (projectiles[i].chargeShot == true && projectiles[i_].chargeShot == true && projectiles[i].originalOwner == 2 && projectiles[i_].originalOwner == 2)
+                                            {
+                                                projectiles[i_].removalPing = true;
+                                                multiChargeSpreadLoc = projectiles[i].location;
+                                                fireballImpacts.Add(new FireballImpact(graphics, content, new Vector2(projectiles[i_].bounds.Center.X, projectiles[i_].bounds.Center.Y), projectiles[i_].originalOwner, projectiles[i_].chargeShot, false, 0, true, impactT, impactT2, impactT3, impactT4));
+                                                tiredTiredExplode = true;
                                                 projectiles.RemoveAt(i--);
                                             }
                                         }
@@ -370,6 +418,11 @@ namespace WizardDuel
                                             player.sleepTimer = 0;
                                         }
                                     }
+                                    else if(projectiles[i].chargeShot == false)
+                                    {
+                                        player.incapped = true;
+                                        player.incapTimer = 0;
+                                    }
                                 }
                                 else
                                 {
@@ -386,6 +439,11 @@ namespace WizardDuel
                                             player.slept = true;
                                             player.sleepTimer = 0;
                                         }
+                                    }
+                                    else if (projectiles[i].chargeShot == false)
+                                    {
+                                        player.incapped = true;
+                                        player.incapTimer = 0;
                                     }
                                 }
                                 fireballImpacts.Add(new FireballImpact(graphics, content, new Vector2(projectiles[i].bounds.Center.X, projectiles[i].bounds.Top), projectiles[i].originalOwner, projectiles[i].chargeShot, true, (float)projectiles[i].angle, false));
