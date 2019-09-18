@@ -12,18 +12,11 @@ using Microsoft.Xna.Framework.Content;
 
 namespace WizardDuel
 {
-    class SinglePlayer
+    class SinglePlayer : AssetContainer
     {
         public GameStates currentGameState;
-
-        public Texture2D impactT;
-        public Texture2D impactT2;
-        public Texture2D impactT3;
-        public Texture2D impactT4;
-
-        ContentManager content;
+        
         GraphicsDeviceManager graphics;
-        SpriteFont font;
 
         public bool active = false;
 
@@ -39,23 +32,18 @@ namespace WizardDuel
         public int playerOneChoice;
         public int playerTwoChoice;
         
-        public SinglePlayer(GameStates currentGameState, ContentManager content, GraphicsDeviceManager graphics, Texture2D big1, Texture2D big2, Texture2D big3, Texture2D big4)
+        public SinglePlayer(GameStates currentGameState, GraphicsDeviceManager graphics)
         {
-            this.content = content;
             this.graphics = graphics;
             this.currentGameState = currentGameState;
-            boundary = new Boundary(content, graphics);
-            gameLoopLogic = new GameLoopLogic(content, graphics, boundary, big1, big2, big3, big4);
+            boundary = new Boundary(graphics);
 
-            gameLoopLogic.players.Add(new Player(ControlType.GamePlay, PlayerIndex.One, content, graphics, this.currentGameState));
-            gameLoopLogic.players.Add(new Player(ControlType.GamePlay, PlayerIndex.Two, content, graphics, GameStates.SinglePlayer));
-            gameClock = new GameClock(graphics, content);
+            gameLoopLogic = new GameLoopLogic(graphics, boundary);
+
+            gameLoopLogic.players.Add(new Player(ControlType.GamePlay, PlayerIndex.One, graphics, this.currentGameState));
+            gameLoopLogic.players.Add(new Player(ControlType.GamePlay, PlayerIndex.Two, graphics, GameStates.SinglePlayer));
+            gameClock = new GameClock(graphics);
             active = true;
-
-            gameLoopLogic.impactT = impactT;
-            gameLoopLogic.impactT2 = impactT2;
-            gameLoopLogic.impactT3 = impactT3;
-            gameLoopLogic.impactT4 = impactT4;
         }
         public void CharacterChoices(int choice1, int choice2)
         {
@@ -93,24 +81,6 @@ namespace WizardDuel
 
             gameLoopLogic.projectiles.Clear();
             gameLoopLogic.fireballImpacts.Clear();
-        }
-        public void LoadContent()
-        {
-            font = content.Load<SpriteFont>("fonts/gameclock");
-            boundary.Loadcontent();
-            foreach (Player player in gameLoopLogic.players)
-            {
-                player.LoadContent();
-            }
-        }
-        public void Unloadcontent()
-        {
-            content.Unload();
-            boundary.UnloadContent();
-            foreach (Player player in gameLoopLogic.players)
-            {
-                player.UnloadContent();
-            }
         }
         public void Update(GameTime gameTime)
         {

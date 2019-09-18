@@ -12,9 +12,8 @@ using Microsoft.Xna.Framework.Content;
 
 namespace WizardDuel
 {
-    class MainMenu
+    class MainMenu : AssetContainer
     {
-        ContentManager content;
         GraphicsDeviceManager graphics;
         public Input input;
 
@@ -39,8 +38,6 @@ namespace WizardDuel
         Animation upwardWipeTransition;
         Animation nonCombatTransition;
 
-        SpriteFont font;
-
         bool multiplayerDenial;
 
         public GameStates currentGamestate { get; set; }
@@ -51,20 +48,6 @@ namespace WizardDuel
         Vector2 pointerPosition;
         double UItimer;
         int titleCounter = 0;
-
-        Texture2D statsButtonT;
-        Texture2D versusButtonT;
-        Texture2D controlInfoButtonT;
-        Texture2D exitButtonT;
-        Texture2D singleplayerbuttonT;
-        Texture2D title1;
-        Texture2D title2;
-        Texture2D title3;
-        Texture2D menuIdle;
-        Texture2D fireballAnimationT;
-        Texture2D explosionAnimationT;
-        Texture2D upwardWipeTransitionT;
-        Texture2D nonCombatTransitionT;
 
         Vector2 zeroPlacement = new Vector2(0, 0);
         Vector2 titlePlacement = new Vector2(0, -100);
@@ -93,31 +76,12 @@ namespace WizardDuel
         bool menuSelectAnimationDone = false;
         public bool fromNonCombat = false;
 
-        public MainMenu(GameStates currentGameState, ContentManager content, GraphicsDeviceManager graphics)
+        public MainMenu(GameStates currentGameState, GraphicsDeviceManager graphics)
         {
             this.currentGamestate = currentGameState;
-            this.content = content;
             this.graphics = graphics;
             input = new Input(ControlType.Menu, PlayerIndex.One, false);
             multiplayerDenial = false;
-        }
-
-        public void LoadContent()
-        {
-            versusButtonT = content.Load<Texture2D>("menu buttons/versusbutton");
-            controlInfoButtonT = content.Load<Texture2D>("menu buttons/controlsbutton");
-            exitButtonT = content.Load<Texture2D>("menu buttons/exitbutton");
-            statsButtonT = content.Load<Texture2D>("menu buttons/statsbutton");
-            font = content.Load<SpriteFont>("fonts/gameclock");
-            singleplayerbuttonT = content.Load<Texture2D>("menu buttons/singleplayerbutton");
-            title1 = content.Load<Texture2D>("full screen art/titlescreen_1");
-            title2 = content.Load<Texture2D>("full screen art/titlescreen_2");
-            title3 = content.Load<Texture2D>("full screen art/titlescreen_3");
-            menuIdle = content.Load<Texture2D>("full screen art/menuidle");
-            fireballAnimationT = content.Load<Texture2D>("transitions/menuconfirmfireball");
-            explosionAnimationT = content.Load<Texture2D>("transitions/explodetransition");
-            nonCombatTransitionT = content.Load<Texture2D>("transitions/tononcombatscreentransition");
-            upwardWipeTransitionT = content.Load<Texture2D>("transitions/upwardscreenwipetransitionin");
 
             titleAnimation1 = new Animation(title1, 4, 10);
             titleAnimation2 = new Animation(title2, 5, 10);
@@ -137,7 +101,7 @@ namespace WizardDuel
             versusPlacement = new Vector2(0, singleplayerButton.height);
             controlInfoPlacement = new Vector2(0, singleplayerButton.height + versusButton.height);
             exitPlacement = new Vector2(0, singleplayerButton.height + versusButton.height + controlsButton.height + statsButton.height);
-            singleplayerPlacement = new Vector2(0,0);
+            singleplayerPlacement = new Vector2(0, 0);
             statsPlacement = new Vector2(0, singleplayerButton.height + versusButton.height + controlsButton.height);
             singlePlayerFireballPlacement = new Vector2(singleplayerPlacement.X - fireballAnimation.width, singleplayerPlacement.Y);
             versusFireballPlacement = new Vector2(versusPlacement.X - fireballAnimation.width, versusPlacement.Y);
@@ -149,11 +113,6 @@ namespace WizardDuel
             singlePlayerRect = new Rectangle((int)singleplayerPlacement.X, (int)singleplayerPlacement.Y, singleplayerButton.width, singleplayerButton.height);
             controlInfoRect = new Rectangle((int)controlInfoPlacement.X, (int)controlInfoPlacement.Y, controlsButton.width, controlsButton.height);
             exitRect = new Rectangle((int)exitPlacement.X, (int)exitPlacement.Y, exitButton.width, exitButton.height);
-        }
-
-        public void UnloadContent()
-        {
-            content.Unload();
         }
 
         public void Draw(SpriteBatch spriteBatch)

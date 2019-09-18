@@ -12,25 +12,20 @@ using Microsoft.Xna.Framework.Content;
 
 namespace WizardDuel
 {
-    class WallSegment
+    class WallSegment : AssetContainer
     {
-        ContentManager content;
-        GraphicsDeviceManager graphics;
-
-        Texture2D brickT;
         public Animation brick;
-        public Rectangle brickRect;
-        public Vector2 brickLocation;
-
-        public Vector2 brickDebrisLoc;
-        Texture2D brickDebrisT;
         public Animation brickDebris;
 
+        public Rectangle brickRect;
+
+        public Vector2 brickLocation;
+        public Vector2 brickDebrisLoc;
+
         public int health;
+        public int index;
 
         public PlayerIndex playerIndex;
-
-        public int index;
 
         public bool collisionOff;
 
@@ -39,15 +34,9 @@ namespace WizardDuel
 
         public int timer;
 
-        public WallSegment(ContentManager content, GraphicsDeviceManager graphics)
+        public WallSegment()
         {
-            this.content = content;
-            this.graphics = graphics;
-
-            brickT = content.Load<Texture2D>("sprites/border items/breakwall");
             brick = new Animation(brickT, 4, 4);
-
-            brickDebrisT = content.Load<Texture2D>("sprites/border items/brickdebris");
             brickDebris = new Animation(brickDebrisT, 2, 4);
         }
         public void PlaceBricks(int brickLocationX, int brickLocationY, PlayerIndex playerIndex, int index)
@@ -80,12 +69,22 @@ namespace WizardDuel
         public void Update(GameTime gameTime)
         {
             BrickShaker(gameTime);
+            BrickHealthLogic();
             if (brickDebris.currentFrame >= 0)
             {
                 brickDebris.Update(gameTime);
             }
-            brickLocation.X += shakeX;
-            brickLocation.Y += shakeY;
+        }
+        public void Draw(SpriteBatch spriteBatch)
+        {
+            brick.Draw(spriteBatch, brickLocation);
+            if (brickDebris.currentFrame >= 0)
+            {
+                brickDebris.Draw(spriteBatch, brickDebrisLoc);
+            }
+        }
+        void BrickHealthLogic()
+        {
             if (playerIndex == PlayerIndex.One)
             {
                 if (health == 10)
@@ -151,15 +150,7 @@ namespace WizardDuel
                 }
             }
         }
-        public void Draw(SpriteBatch spriteBatch)
-        {
-            brick.Draw(spriteBatch, brickLocation);
-            if (brickDebris.currentFrame >= 0)
-            {
-                brickDebris.Draw(spriteBatch, brickDebrisLoc);
-            }
-        }
-        public void Debris()
+        void Debris()
         {
             if(timer >= 0 && timer < 50)
             {
@@ -177,43 +168,38 @@ namespace WizardDuel
                 brickDebris.currentFrame = -1;
             }
         }
-        public void BrickShaker(GameTime gameTime)
+        void BrickShaker(GameTime gameTime)
         {
             timer += gameTime.ElapsedGameTime.Milliseconds;
             Debris();
-            if(timer >= 0 && timer < 50)
+            brickLocation.X += shakeX;
+            brickLocation.Y += shakeY;
+            if (timer >= 0 && timer < 50)
             {
-                //shakeX = 3;
                 shakeY = 3;
             }
             if (timer >= 50 && timer < 100)
             {
-                //shakeX = -3;
                 shakeY = -3;
             }
             if (timer >= 100 && timer < 150)
             {
-                //shakeX = 2;
                 shakeY = 2;
             }
             if (timer >= 150 && timer < 200)
             {
-                //shakeX = -2;
                 shakeY = -2;
             }
             if (timer >= 200 && timer < 250)
             {
-                //shakeX = 1;
                 shakeY = 1;
             }
             if (timer >= 250 && timer < 300)
             {
-                //shakeX = -1;
                 shakeY = -1;
             }
             if(timer >= 300)
             {
-                //shakeX = 0;
                 shakeY = 0;
             }
         }

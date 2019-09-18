@@ -27,19 +27,15 @@ namespace WizardDuel
         Multiplayer multiPlayer;
         ControlInfoScreen controlInfoScreen;
         SinglePlayer singlePlayer;
-        PlayererSelect playerSelect;
+        PlayerSelect playerSelect;
 
         SpriteFont font;
-
-        Texture2D bigExplodeT1;
-        Texture2D bigExplodeT2;
-        Texture2D bigExplodeT3;
-        Texture2D bigExplodeT4;
-
 
         bool bigTexturesLoading;
 
         bool importedChoices;
+
+        AssetContainer assetContainer;
 
         public WizardDuel()
         {
@@ -54,17 +50,26 @@ namespace WizardDuel
 
         protected override void Initialize()
         {
-            bigExplodeT1 = Content.Load<Texture2D>("sprites/player effects/multichargeimpactone");
-            bigExplodeT2 = Content.Load<Texture2D>("sprites/player effects/multichargeimpacttwo");
-            bigExplodeT3 = Content.Load<Texture2D>("sprites/player effects/multichargeimpactthree");
-            bigExplodeT4 = Content.Load<Texture2D>("sprites/player effects/multichargeimpactfour");
-
             currentGameState = GameStates.MainMenu;
-            menu = new MainMenu(currentGameState, Content, graphics);
-            multiPlayer = new Multiplayer(currentGameState, Content, graphics, bigExplodeT1, bigExplodeT2, bigExplodeT3, bigExplodeT4);
-            controlInfoScreen = new ControlInfoScreen(currentGameState, Content, graphics);
-            singlePlayer = new SinglePlayer(currentGameState, Content, graphics, bigExplodeT1, bigExplodeT2, bigExplodeT3, bigExplodeT4);
-            playerSelect = new PlayererSelect(currentGameState, Content, graphics);
+
+            assetContainer = new AssetContainer();
+            assetContainer.GrabContentManager(Content);
+            assetContainer.LoadImpactAssets();
+            assetContainer.LoadBoundaryAssets();
+            assetContainer.LoadMainMenuAssets();
+            assetContainer.LoadGameLoopAssets();
+            assetContainer.LoadPlayerAssets();
+            assetContainer.LoadPlayerSelectAssets();
+            assetContainer.LoadControlInfoScreenAssets();
+            assetContainer.LoadMiscAssets();
+            assetContainer.LoadProjectileAssets();
+
+            menu = new MainMenu(currentGameState, graphics);
+            
+            multiPlayer = new Multiplayer(currentGameState, graphics);
+            controlInfoScreen = new ControlInfoScreen(currentGameState, graphics);
+            singlePlayer = new SinglePlayer(currentGameState, graphics);
+            playerSelect = new PlayerSelect(currentGameState, graphics);
 
             base.Initialize();
             Window.Title = "Wizard Duel";
@@ -74,62 +79,10 @@ namespace WizardDuel
         {
             spriteBatch = new SpriteBatch(GraphicsDevice);
             font = Content.Load<SpriteFont>("fonts/gameclock");
-            switch (currentGameState)
-            {
-                case GameStates.MultiPlayer:
-                    if (controlInfoScreen.outsideGamestate != GameStates.MultiPlayer)
-                    {
-                        multiPlayer.LoadContent();
-                    }
-                    break;
-                case GameStates.MainMenu:
-                    menu.LoadContent();
-                    break;
-                case GameStates.ControlScreen:
-                    controlInfoScreen.LoadContent();
-                    break;
-                case GameStates.SinglePlayer:
-                    if (controlInfoScreen.outsideGamestate != GameStates.SinglePlayer)
-                    {
-                        singlePlayer.LoadContent();
-                    }
-                    break;
-                case GameStates.PlayerSelectSingle:
-                case GameStates.PlayerSelectDouble:
-                    playerSelect.LoadContent();
-                    break;
-            }
         }
 
         protected override void UnloadContent()
         {
-            switch (currentGameState)
-            {
-                case GameStates.MultiPlayer:
-                    if (currentGameState != GameStates.MultiPlayer)
-                    {
-                        multiPlayer.Unloadcontent();
-                    }
-                    break;
-                case GameStates.MainMenu:
-                    if(currentGameState != GameStates.MainMenu)
-                    {
-                        menu.UnloadContent();
-                    }
-                    break;
-                case GameStates.ControlScreen:
-                    if(currentGameState != GameStates.ControlScreen)
-                    {
-                        controlInfoScreen.UnloadContent();
-                    }
-                    break;
-                case GameStates.SinglePlayer:
-                    if(currentGameState != GameStates.SinglePlayer)
-                    {
-                        singlePlayer.Unloadcontent();
-                    }
-                    break;
-            }
         }
 
         protected override void Update(GameTime gameTime)

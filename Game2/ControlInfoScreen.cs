@@ -12,18 +12,12 @@ using Microsoft.Xna.Framework.Content;
 
 namespace WizardDuel
 {
-    class ControlInfoScreen
+    class ControlInfoScreen : AssetContainer
     {
         public GameStates currentGameState { get; set; }
-        ContentManager content;
         GraphicsDeviceManager graphics;
 
         public bool fromCombat;
-
-        Texture2D keyboardcontrols;
-        Texture2D controlcontrols;
-        Texture2D upwardSwipeTransitionT;
-        Texture2D nonCombatTransitionT;
 
         public Animation nonCombatTransition;
         public Animation upwarpSwipeTransition;
@@ -39,13 +33,15 @@ namespace WizardDuel
 
         public int timer;
 
-        public ControlInfoScreen(GameStates currentGameState, ContentManager content, GraphicsDeviceManager graphics)
+        public ControlInfoScreen(GameStates currentGameState, GraphicsDeviceManager graphics)
         {
             this.currentGameState = currentGameState;
-            this.content = content;
             this.graphics = graphics;
             input = new Input(ControlType.Menu, PlayerIndex.One, false);
             fromCombat = false;
+
+            nonCombatTransition = new Animation(nonCombatTransitionT, 2, 5);
+            upwarpSwipeTransition = new Animation(upwardSwipeTransitionT, 3, 2);
         }
         public void Draw(SpriteBatch spriteBatch)
         {
@@ -93,13 +89,7 @@ namespace WizardDuel
         }
         public void LoadContent()
         {
-            keyboardcontrols = content.Load<Texture2D>("full screen art/kbcontrols");
-            controlcontrols = content.Load<Texture2D>("full screen art/controllercontrols");
-            upwardSwipeTransitionT = content.Load<Texture2D>("transitions/upwardscreenwipetransitionin");
-            nonCombatTransitionT = content.Load<Texture2D>("transitions/tononcombatscreentransition");
-
-            nonCombatTransition = new Animation(nonCombatTransitionT, 2, 5);
-            upwarpSwipeTransition = new Animation(upwardSwipeTransitionT, 3, 2);
+            
         }
         public void UnloadContent()
         {

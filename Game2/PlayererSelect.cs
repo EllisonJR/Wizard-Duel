@@ -13,24 +13,14 @@ using Microsoft.Xna.Framework.Content;
 namespace WizardDuel
 {
     enum Characters { Buff = 1, Tired = 2, Random = 3}
-    class PlayererSelect
+    class PlayerSelect : AssetContainer
     {
-        ContentManager content;
         GraphicsDeviceManager graphics;
         public GameStates currentGameState;
 
         public bool active;
 
         public List<Input> inputs = new List<Input>();
-
-        Texture2D buffWizardT;
-        Texture2D tiredWizardT;
-        Texture2D randomT;
-        Texture2D selecterT;
-        Texture2D toCombatTransitionT;
-        Texture2D toMenuTransitionT;
-        Texture2D toSelectTransitionT;
-        Texture2D backArrowT;
 
         Animation buffWizard;
         Animation tiredWizard;
@@ -74,22 +64,10 @@ namespace WizardDuel
 
         public bool toCombat = false;
 
-        public PlayererSelect(GameStates currentGameState, ContentManager content, GraphicsDeviceManager graphics)
+        public PlayerSelect(GameStates currentGameState, GraphicsDeviceManager graphics)
         {
             this.currentGameState = currentGameState;
-            this.content = content;
             this.graphics = graphics;
-        }
-        public void LoadContent()
-        {
-            buffWizardT = content.Load<Texture2D>("character select buttons/buffwizardicon");
-            tiredWizardT = content.Load<Texture2D>("character select buttons/tiredwizardicon");
-            randomT = content.Load<Texture2D>("character select buttons/randomicon");
-            selecterT = content.Load<Texture2D>("character select buttons/playerdongle");
-            toMenuTransitionT = content.Load<Texture2D>("transitions/swipetransition");
-            toCombatTransitionT = content.Load<Texture2D>("transitions/playerselectconfirm");
-            toSelectTransitionT = content.Load<Texture2D>("transitions/circletransitionreverse");
-            backArrowT = content.Load<Texture2D>("transitions/backarrow");
 
             buffWizard = new Animation(buffWizardT, 4, 5);
             tiredWizard = new Animation(tiredWizardT, 4, 8);
@@ -100,7 +78,7 @@ namespace WizardDuel
             toCombatTransition = new Animation(toCombatTransitionT, 4, 10);
             toSelectTransition = new Animation(toSelectTransitionT, 2, 5);
             backArrow = new Animation(backArrowT, 5, 5);
-            
+
             portraitPlacement1 = new Vector2(75, 75);
             portraitPlacement2 = new Vector2(portraitPlacement1.X + buffWizard.width + 50, portraitPlacement1.Y);
             portraitPlacement3 = new Vector2(portraitPlacement1.X, portraitPlacement1.Y + buffWizard.height + 75);
@@ -123,6 +101,10 @@ namespace WizardDuel
             P1Select.currentFrame = 0;
             P2Select.currentFrame = 16;
         }
+        public void LoadContent()
+        {
+            
+        }
         public void Reset()
         {
             if (toCombat == true)
@@ -136,10 +118,6 @@ namespace WizardDuel
                 P1Select.currentFrame = 0;
                 P2Select.currentFrame = 16;
             }
-        }
-        public void UnloadContent()
-        {
-            content.Unload();
         }
         public int PlayerOneChoice()
         {

@@ -30,7 +30,20 @@ namespace WizardDuel
 
         public float angle;
 
-        Vector2 center;
+        public Vector2 center;
+
+        public bool shrink = false;
+
+        Vector2 sizer = new Vector2(2, 2);
+        float shrinker = .1f;
+
+        public int r = 255;
+        public int g = 170;
+        public int b = 85;
+
+        public bool rainbow = false;
+        public bool fire = false;
+        public bool rainbowRapid;
 
         public Animation(Texture2D texture, int rows, int columns)
         {
@@ -70,8 +83,35 @@ namespace WizardDuel
             this.currentFrame = currentFrame;
             this.frameTime = frameTime;
         }
+        public Animation(Texture2D texture, int rows, int columns, int currentFrame, int frameTime, int i)
+        {
+            spriteSheet = texture;
+            this.rows = rows;
+            this.columns = columns;
+            currentFrame = i;
+            totalFrames = rows * columns;
+            width = spriteSheet.Width / columns;
+            height = spriteSheet.Height / rows;
+            this.currentFrame = currentFrame;
+            this.frameTime = frameTime;
+        }
+        public Animation(Texture2D texture, int rows, int columns,int frameTime, int r, int g, int b)
+        {
+            spriteSheet = texture;
+            this.rows = rows;
+            this.columns = columns;
+            totalFrames = rows * columns;
+            width = spriteSheet.Width / columns;
+            height = spriteSheet.Height / rows;
+            this.frameTime = frameTime;
+            this.r = r;
+            this.g = g;
+            this.b = b;
+        }
         public void Update(GameTime gameTime)
         {
+            
+            
             frameTimer += gameTime.ElapsedGameTime.Milliseconds;
             if (frameTimer >= frameTime)
             {
@@ -100,6 +140,52 @@ namespace WizardDuel
         }
         public void Draw(SpriteBatch spriteBatch, Vector2 location)
         {
+            if(rainbow == true)
+            {
+                r += 5;
+                if (r > 255)
+                {
+                    r = 0;
+                }
+                g += 5;
+                if (g > 255)
+                {
+                    g = 0;
+                }
+                b += 5;
+                if (b > 255)
+                {
+                    b = 0;
+                }
+            }
+            if (rainbowRapid == true)
+            {
+                r += 30;
+                if (r > 255)
+                {
+                    r = 0;
+                }
+                g += 30;
+                if (g > 255)
+                {
+                    g = 0;
+                }
+                b += 30;
+                if (b > 255)
+                {
+                    b = 0;
+                }
+            }
+            if (fire == true)
+            {
+                r -= 5;
+                if (r <= 200)
+                {
+                    r = 250;
+                }
+                g = 80;
+                b = 20;
+            }
             drawingLocation = location;
 
             int row = (int)((float)currentFrame / (float)columns);
@@ -108,7 +194,146 @@ namespace WizardDuel
             Rectangle sourceRectangle = new Rectangle(width * column, height * row, width, height);
             Rectangle destinationRectangle = new Rectangle((int)location.X, (int)location.Y, width, height);
 
-            spriteBatch.Draw(spriteSheet, destinationRectangle, sourceRectangle, Color.White);
+            center = new Vector2(width / 2, height / 2);
+
+            if (shrink == false)
+            {
+                if (rainbow == false)
+                {
+                    spriteBatch.Draw(spriteSheet, destinationRectangle, sourceRectangle, Color.White);
+                }
+                if(rainbow == true || fire == true || rainbowRapid == true)
+                {
+                    spriteBatch.Draw(spriteSheet, destinationRectangle, sourceRectangle, new Color(r,g,b));
+                }
+            }
+            if(shrink == true)
+            {
+                if(rainbow == true || fire == true || rainbowRapid == true)
+                {
+                    spriteBatch.Draw(spriteSheet, new Vector2(destinationRectangle.Location.X, destinationRectangle.Location.Y) + center, sourceRectangle, new Color(r,g,b), 0f, center, sizer, SpriteEffects.None, 0f);
+                }
+                if (rainbow == false)
+                {
+                    spriteBatch.Draw(spriteSheet, new Vector2(destinationRectangle.Location.X, destinationRectangle.Location.Y) + center, sourceRectangle, Color.White, 0f, center, sizer, SpriteEffects.None, 0f);
+                }
+                sizer.X -= shrinker;
+                sizer.Y -= shrinker;
+                if(sizer.X <= 1)
+                {
+                    shrink = false;
+                    sizer = new Vector2(2, 2);
+                }
+            }
+        }
+        public void Draw(SpriteBatch spriteBatch, Vector2 location, int r, int g, int b)
+        {
+            if (rainbow == true)
+            {
+                r += 50;
+                if (r > 255)
+                {
+                    r = 0;
+                }
+                g += 50;
+                if (g > 255)
+                {
+                    g = 0;
+                }
+                b += 50;
+                if (b > 255)
+                {
+                    b = 0;
+                }
+            }
+
+            drawingLocation = location;
+
+            int row = (int)((float)currentFrame / (float)columns);
+            int column = currentFrame % columns;
+
+            Rectangle sourceRectangle = new Rectangle(width * column, height * row, width, height);
+            Rectangle destinationRectangle = new Rectangle((int)location.X, (int)location.Y, width, height);
+
+            center = new Vector2(width / 2, height / 2);
+
+            if (shrink == false)
+            {
+                spriteBatch.Draw(spriteSheet, destinationRectangle, sourceRectangle, new Color(r, g, b));
+            }
+            if (shrink == true)
+            {
+                spriteBatch.Draw(spriteSheet, destinationRectangle, sourceRectangle, new Color(r, g, b));
+                sizer.X -= shrinker;
+                sizer.Y -= shrinker;
+                if (sizer.X <= 1)
+                {
+                    shrink = false;
+                    sizer = new Vector2(2, 2);
+                }
+            }
+        }
+        public void DrawShrink(SpriteBatch spriteBatch, Vector2 location)
+        {
+            drawingLocation = location;
+
+            int row = (int)((float)currentFrame / (float)columns);
+            int column = currentFrame % columns;
+
+            Rectangle sourceRectangle = new Rectangle(width * column, height * row, width, height);
+            Rectangle destinationRectangle = new Rectangle((int)location.X, (int)location.Y, width, height);
+
+            center = new Vector2(width / 2, height / 2);
+
+            spriteBatch.Draw(spriteSheet, new Vector2(destinationRectangle.Location.X, destinationRectangle.Location.Y) + center, sourceRectangle, Color.White, 0f, center, sizer, SpriteEffects.None, 0f);
+            if (sizer.Y > .7f)
+            {
+                sizer.X -= shrinker;
+                sizer.Y -= shrinker;
+            }
+        }
+        public void DrawColor(SpriteBatch spriteBatch, Vector2 location)
+        {
+            r += 50;
+            if (r > 255)
+            {
+                r = 0;
+            }
+            g += 50;
+            if (g > 255)
+            {
+                g = 0;
+            }
+            b += 50;
+            if (b > 255)
+            {
+                b = 0;
+            }
+            drawingLocation = location;
+
+            int row = (int)((float)currentFrame / (float)columns);
+            int column = currentFrame % columns;
+
+            Rectangle sourceRectangle = new Rectangle(width * column, height * row, width, height);
+            Rectangle destinationRectangle = new Rectangle((int)location.X, (int)location.Y, width, height);
+
+            center = new Vector2(width / 2, height / 2);
+
+            if (shrink == false)
+            {
+                spriteBatch.Draw(spriteSheet, destinationRectangle, sourceRectangle, new Color(r,g,b));
+            }
+            if (shrink == true)
+            {
+                spriteBatch.Draw(spriteSheet, new Vector2(destinationRectangle.Location.X, destinationRectangle.Location.Y) + center, sourceRectangle, Color.White, 0f, center, sizer, SpriteEffects.None, 0f);
+                sizer.X -= shrinker;
+                sizer.Y -= shrinker;
+                if (sizer.X <= 1)
+                {
+                    shrink = false;
+                    sizer = new Vector2(2, 2);
+                }
+            }
         }
         public void DrawProjectile(SpriteBatch spriteBatch, Vector2 location, Rectangle bounds)
         {
@@ -123,6 +348,20 @@ namespace WizardDuel
             center = new Vector2(width / 2, height / 2);
 
             spriteBatch.Draw(spriteSheet, destinationRectangle, sourceRectangle, Color.White, angle, center, SpriteEffects.None, 0f);
+        }
+        public void DrawPotion(SpriteBatch spriteBatch, Vector2 location)
+        {
+            drawingLocation = location;
+
+            int row = (int)((float)currentFrame / (float)columns);
+            int column = currentFrame % columns;
+
+            Rectangle sourceRectangle = new Rectangle(width * column, height * row, width, height);
+            Rectangle destinationRectangle = new Rectangle((int)location.X + width / 2, (int)location.Y + height / 2, width, height);
+
+            center = new Vector2(width / 2, height / 2);
+
+            spriteBatch.Draw(spriteSheet, destinationRectangle, sourceRectangle, Color.White, angle += .01f, center, SpriteEffects.None, 0f);
         }
     }
 }

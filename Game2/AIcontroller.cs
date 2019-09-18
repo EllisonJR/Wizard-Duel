@@ -348,7 +348,7 @@ namespace WizardDuel
         public void CalculateShot()
         {
             shooterMatrix = Matrix.CreateRotationZ(angle) * Matrix.CreateTranslation(players[1].reticalLocation.X, players[1].reticalLocation.Y, 0);
-            projectileOrigin = Vector2.Transform(new Vector2(0, players[1].playerRetical.Height), shooterMatrix);
+            //projectileOrigin = Vector2.Transform(new Vector2(0, players[1].playerRetical2.Height), shooterMatrix);
         }
     }
 }

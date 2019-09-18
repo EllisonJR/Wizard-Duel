@@ -12,27 +12,23 @@ using Microsoft.Xna.Framework.Content;
 
 namespace WizardDuel
 {
-    class GameClock
+    class GameClock : AssetContainer
     {
         GameStates gameState;
         GraphicsDeviceManager graphics;
-        SpriteFont font;
 
         public int gameClock { get; set; }
         public int startClock { get; set; }
         double currentTime;
 
-        Texture2D countDownT;
         public Animation countDown;
 
         Vector2 center;
 
-        public GameClock(GraphicsDeviceManager graphics, ContentManager content)
+        public GameClock(GraphicsDeviceManager graphics)
         {
             this.graphics = graphics;
-            font = content.Load<SpriteFont>("fonts/gameclock");
-
-            countDownT = content.Load<Texture2D>("full screen art/countdown");
+            
             countDown = new Animation(countDownT, 5, 8);
 
             center = new Vector2(graphics.PreferredBackBufferWidth / 2 - countDown.width / 2, graphics.PreferredBackBufferHeight / 2 - countDown.height / 2);

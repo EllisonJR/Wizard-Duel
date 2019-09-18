@@ -76,6 +76,7 @@
   <ItemGroup>
     <Compile Include="AIcontroller.cs" />
     <Compile Include="Animation.cs" />
+    <Compile Include="AssetContainer.cs" />
     <Compile Include="Boundary.cs" />
     <Compile Include="CharacterAdjuster.cs" />
     <Compile Include="EndGameSequence.cs" />
@@ -89,6 +90,10 @@
     <Compile Include="ControlInfoScreen.cs" />
     <Compile Include="Player.cs" />
     <Compile Include="PlayererSelect.cs" />
+    <Compile Include="Potions.cs" />
+    <Compile Include="PotionSmoke.cs" />
+    <Compile Include="PotionSpawner.cs" />
+    <Compile Include="PotionVectors.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Projectile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

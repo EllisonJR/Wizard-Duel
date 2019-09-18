@@ -12,9 +12,8 @@ using Microsoft.Xna.Framework.Content;
 
 namespace WizardDuel
 {
-    class Player
+    class Player : AssetContainer
     {
-        public ContentManager content;
         public GraphicsDeviceManager graphics;
         public PlayerIndex playerIndex { get; }
         public bool AI;
@@ -25,17 +24,8 @@ namespace WizardDuel
         public Rectangle aiRectangle;
 
         public float angle;
-        public Texture2D buffSpriteT;
-        public Texture2D tiredSpriteT;
-        public Texture2D tiredReflectT;
-        public Texture2D playerRetical;
         public Rectangle hitBox;
         public Rectangle reflectHitBox;
-        Texture2D buffHitboxT;
-        Texture2D tiredHitboxT;
-        Texture2D tiredReflectBoxT;
-        Texture2D buffReflectBoxT;
-        Texture2D shotMeterTexture;
         Rectangle shotMeter;
         float shotMeterCounter;
         Vector2 shotMeterLocation;
@@ -73,16 +63,13 @@ namespace WizardDuel
         public bool slowed;
         public bool stunned;
         public bool incapped;
-
-        Texture2D slowEffectT;
+        
         Animation slowEffect;
         Vector2 slowLocation;
-
-        Texture2D stunnedEffectT;
+        
         Animation stunnedEffect;
         Vector2 stunnedLocation;
-
-        Texture2D sleepEffectT;
+        
         Animation sleepEffect;
         Vector2 sleepLocation;
 
@@ -92,30 +79,40 @@ namespace WizardDuel
         public int sleepTimer;
 
         public int incapTimer;
-
-        Texture2D kickedUpDustT;
+        
         Vector2 kickedUpDustLocation;
         Animation kickedUpDust;
-        Texture2D landingPoofT;
         Vector2 landingPoofLocation;
         Animation landingPoof;
-        Texture2D dashRightTrailT;
-        Texture2D dashLeftTrailT;
-        Texture2D dashRightTrailT2;
-        Texture2D dashLeftTrailT2;
-        Texture2D dashRightTrailT3;
-        Texture2D dashLeftTrailT3;
-        Texture2D dashRightTrailT4;
-        Texture2D dashLeftTrailT4;
+        
         List<Vector2> dashTrailLocations = new List<Vector2>();
         List<Animation> dashTrails = new List<Animation>();
 
+        public PotionTypes potionType;
+
         int dashTrailTimer;
 
-        public Player(ControlType controlType, PlayerIndex playerIndex, ContentManager content, GraphicsDeviceManager graphics, GameStates gameState)
+        int potionTimer;
+        int r = 0;
+        int g = 0;
+        int b = 0;
+        int rgbincrementer = 20;
+        int colorTimer;
+        bool incrementRed = true;
+        bool incrementGreen = false;
+        bool incrementBlue = false;
+
+        Vector2 chargePotionAnimLocation;
+        List<Animation> chargePotAnims1 = new List<Animation>();
+
+        List<Animation> shieldPanels = new List<Animation>();
+        Animation shieldFrame;
+        Vector2 shieldLocation;
+        public Rectangle shieldHitbox;
+
+        public Player(ControlType controlType, PlayerIndex playerIndex, GraphicsDeviceManager graphics, GameStates gameState)
         {
-            characterAdjuster = new CharacterAdjuster(content, graphics);
-            this.content = content;
+            characterAdjuster = new CharacterAdjuster();
             this.graphics = graphics;
             this.playerIndex = playerIndex;
             this.gameState = gameState;
@@ -128,34 +125,13 @@ namespace WizardDuel
             health = 3;
             score = 0;
             playerSpeed = 5;
+            potionType = PotionTypes.None;
 
-        }
-        public void LoadContent()
-        {
-            buffSpriteT = content.Load<Texture2D>("sprites/playersprites/buffwizard");
-            tiredSpriteT = content.Load<Texture2D>("sprites/playersprites/tiredwizard");
-            tiredReflectT = content.Load<Texture2D>("sprites/player effects/tiredwizardreflect");
-            shotMeterTexture = content.Load<Texture2D>("sprites/fireball");
-            buffHitboxT = content.Load<Texture2D>("sprites/hitboxes/buffwizardhitbox");
-            tiredHitboxT = content.Load<Texture2D>("sprites/hitboxes/tiredwizardhitbox");
-            buffReflectBoxT = content.Load<Texture2D>("sprites/hitboxes/buffwizardreflecthitbox");
-            tiredReflectBoxT = content.Load<Texture2D>("sprites/hitboxes/tiredwizardreflecthitbox");
-            slowEffectT = content.Load<Texture2D>("sprites/playerSprites/sloweffect");
-            stunnedEffectT = content.Load<Texture2D>("sprites/playerSprites/stuneffect");
-            sleepEffectT = content.Load<Texture2D>("sprites/player effects/sleepeffect");
-
-            kickedUpDustT = content.Load<Texture2D>("sprites/player effects/dashstartparticles");
-            landingPoofT = content.Load<Texture2D>("sprites/player effects/dash landing particles");
-
-            dashRightTrailT = content.Load<Texture2D>("sprites/player effects/dashRightTrail");
-            dashLeftTrailT = content.Load<Texture2D>("sprites/player effects/dashLeftTrail");
-            dashRightTrailT2 = content.Load<Texture2D>("sprites/player effects/dashRightTrail2");
-            dashLeftTrailT2 = content.Load<Texture2D>("sprites/player effects/dashLeftTrail2");
-            dashRightTrailT3 = content.Load<Texture2D>("sprites/player effects/dashRightTrail3");
-            dashLeftTrailT3 = content.Load<Texture2D>("sprites/player effects/dashLeftTrail3");
-            dashRightTrailT4 = content.Load<Texture2D>("sprites/player effects/dashRightTrail4");
-            dashLeftTrailT4 = content.Load<Texture2D>("sprites/player effects/dashLeftTrail4");
-
+            chargePotAnims1.Add(new Animation(chargePotAnimT1, 2, 3));
+            chargePotAnims1.Add(new Animation(chargePotAnimT2, 2, 3));
+            chargePotAnims1.Add(new Animation(chargePotAnimT3, 2, 3));
+            chargePotAnims1.Add(new Animation(chargePotAnimT4, 2, 3));
+            chargePotAnims1.Add(new Animation(chargePotAnimT5, 2, 3));
 
             kickedUpDust = new Animation(kickedUpDustT, 3, 8);
             landingPoof = new Animation(landingPoofT, 3, 10);
@@ -165,34 +141,32 @@ namespace WizardDuel
             stunnedEffect = new Animation(stunnedEffectT, 2, 3);
             playerAnimations = new Animation(buffSpriteT, 6, 20);
 
-            if(playerChoice == 1)
+            if (playerChoice == 1)
             {
                 playerAnimations = new Animation(buffSpriteT, 6, 20);
             }
-            if(playerChoice == 2)
+            if (playerChoice == 2)
             {
                 playerAnimations = new Animation(tiredSpriteT, 14, 10);
             }
 
             if (playerIndex == PlayerIndex.One)
             {
-                playerRetical = content.Load<Texture2D>("sprites/playerSprites/aimingretical");
                 playerLocation = new Vector2((graphics.PreferredBackBufferWidth / 2) - (playerAnimations.width / 2), graphics.PreferredBackBufferHeight - playerAnimations.height + 13);
                 reticalLocation = new Vector2((playerLocation.X + playerAnimations.width / 2), playerLocation.Y + playerAnimations.height / 2);
-                
+
             }
             else if (playerIndex == PlayerIndex.Two)
             {
-                playerRetical = content.Load<Texture2D>("sprites/playerSprites/aimingreticalP2");
-                playerLocation = new Vector2((graphics.PreferredBackBufferWidth / 2) - (playerAnimations.width / 2), - 5);
+                playerLocation = new Vector2((graphics.PreferredBackBufferWidth / 2) - (playerAnimations.width / 2), -5);
                 reticalLocation = new Vector2(playerLocation.X + (playerAnimations.width / 2), playerLocation.Y + playerAnimations.height / 2);
-                
+
                 if (AI == true)
                 {
                     aiRectangle = new Rectangle((int)playerLocation.X - 45, (int)playerLocation.Y, 120, hitBox.Height);
                 }
             }
-            
+
             tiredreflectAnimation = new Animation(tiredReflectT, 3, 10);
             tiredreflectAnimation.currentFrame = -1;
             tiredreflectAnimation.frameTime = 75;
@@ -200,6 +174,78 @@ namespace WizardDuel
             kickedUpDust.currentFrame = -1;
             landingPoof.currentFrame = -1;
             kickedUpDust.frameTime = 25;
+
+            chargePotionAnimLocation = new Vector2(playerLocation.X + 35, playerLocation.Y + 45);
+
+            chargePotAnims1[0].currentFrame = 0;
+            chargePotAnims1[1].currentFrame = 6;
+            chargePotAnims1[2].currentFrame = 6;
+            chargePotAnims1[3].currentFrame = 6;
+            chargePotAnims1[4].currentFrame = 6;
+
+            shieldFrame = new Animation(shieldFrameT, 5, 12);
+            shieldFrame.frameTime = 75;
+            shieldFrame.currentFrame = 0;
+
+            shieldPanels.Add(new Animation(panel1, 5, 12));
+            shieldPanels.Add(new Animation(panel2, 5, 12));
+            shieldPanels.Add(new Animation(panel3, 5, 12));
+            shieldPanels.Add(new Animation(panel4, 5, 12));
+            shieldPanels.Add(new Animation(panel5, 5, 12));
+            shieldPanels.Add(new Animation(panel6, 5, 12));
+            shieldPanels.Add(new Animation(panel7, 5, 12));
+            shieldPanels.Add(new Animation(panel8, 5, 12));
+            shieldPanels.Add(new Animation(panel9, 5, 12));
+            shieldPanels.Add(new Animation(panel10, 5, 12));
+
+            foreach(Animation shieldPanel in shieldPanels)
+            {
+                shieldPanel.frameTime = 75;
+                shieldPanel.rainbow = true;
+            }
+
+            shieldPanels[0].r = 0;
+            shieldPanels[0].g = 85;
+            shieldPanels[0].b = 170;
+
+            shieldPanels[1].r = 20;
+            shieldPanels[1].g = 105;
+            shieldPanels[1].b = 190;
+
+            shieldPanels[2].r = 40;
+            shieldPanels[2].g = 125;
+            shieldPanels[2].b = 210;
+
+            shieldPanels[3].r = 60;
+            shieldPanels[3].g = 145;
+            shieldPanels[3].b = 230;
+
+            shieldPanels[4].r = 80;
+            shieldPanels[4].g = 165;
+            shieldPanels[4].b = 250;
+
+            shieldPanels[5].r = 100;
+            shieldPanels[5].g = 185;
+            shieldPanels[5].b = 15;
+
+            shieldPanels[6].r = 120;
+            shieldPanels[6].g = 205;
+            shieldPanels[6].b = 35;
+
+            shieldPanels[7].r = 140;
+            shieldPanels[7].g = 225;
+            shieldPanels[7].b = 55;
+
+            shieldPanels[8].r = 160;
+            shieldPanels[8].g = 245;
+            shieldPanels[8].b = 75;
+
+            shieldPanels[9].r = 180;
+            shieldPanels[9].g = 10;
+            shieldPanels[9].b = 95;
+
+            shieldLocation = new Vector2(playerAnimations.drawingLocation.X + playerAnimations.width / 2 - shieldFrame.width / 2,playerAnimations.drawingLocation.Y + playerAnimations.height / 2 - shieldFrame.height / 2 + 5);
+            shieldHitbox = new Rectangle((int)shieldLocation.X, (int)shieldLocation.Y, shieldFrame.width, shieldFrame.height);
         }
         public void ResetPlayers(PlayerIndex playerIndex, int playerChoice)
         {
@@ -213,7 +259,6 @@ namespace WizardDuel
             if (playerIndex == PlayerIndex.One)
             {
                 playerLocation = new Vector2((graphics.PreferredBackBufferWidth / 2) - (playerAnimations.width / 2), graphics.PreferredBackBufferHeight - playerAnimations.height + 13);
-                playerRetical = content.Load<Texture2D>("sprites/playerSprites/aimingretical");
                 if (playerChoice == 1)
                 {
                     
@@ -234,7 +279,7 @@ namespace WizardDuel
             if (playerIndex == PlayerIndex.Two)
             {
                 playerLocation = new Vector2((graphics.PreferredBackBufferWidth / 2) - (playerAnimations.width / 2), - 5);
-                playerRetical = content.Load<Texture2D>("sprites/playerSprites/aimingreticalP2");
+                
                 if (playerChoice == 1)
                 {
                     playerAnimations = new Animation(buffSpriteT, 6, 20);
@@ -265,16 +310,62 @@ namespace WizardDuel
             input.inputAction = InputAction.None;
             inputAction = InputAction.None;
         }
-        public void UnloadContent()
-        {
-            content.Unload();
-        }
         public void Update(GameTime gameTime)
         {
             previousInputAction = inputAction;
             characterAdjuster.UpdateCharacter(gameTime); 
             characterAdjuster.GrabInput(inputAction, playerIndex, playerSpeed, stunned, slowed, slept, incapped, impactLocation);
             playerAnimations.currentFrame = characterAdjuster.PassInFrame();
+                
+            if (potionType != PotionTypes.None)
+            {
+                potionTimer += gameTime.ElapsedGameTime.Milliseconds;
+                
+                if(incrementRed == true)
+                {
+                    r += 50;
+                    if(r >= 255)
+                    {
+                        r = 0;
+                        incrementRed = false;
+                        incrementBlue = true;
+                    }
+                }
+                if(incrementBlue == true)
+                {
+                    b += 50;
+                    if (b >= 255)
+                    {
+                        b = 0;
+                        incrementBlue = false;
+                        incrementGreen = true;
+                    }
+                }
+                if (incrementGreen == true)
+                {
+                    g += 50;
+                    if (g >= 255)
+                    {
+                        g = 0;
+                        incrementGreen = false;
+                        incrementRed = true;
+                    }
+                }
+                if (potionType == PotionTypes.Shield)
+                {
+                    if (potionTimer >= 10000)
+                    {
+                        potionType = PotionTypes.None;
+                    }
+                }
+                else
+                {
+                    if (potionTimer >= 5000)
+                    {
+                        potionType = PotionTypes.None;
+                    }
+                }
+            }
 
             DashEffects(gameTime);
             UpdateDashEffects(gameTime);
@@ -349,6 +440,54 @@ namespace WizardDuel
                     }
                 }
             }
+            for (int i = 0; i < chargePotAnims1.Count; i++)
+            {
+                chargePotAnims1[i].Update(gameTime);
+                
+                if (i + 1 > chargePotAnims1.Count - 1)
+                {
+                    if (chargePotAnims1[i].currentFrame == 3)
+                    {
+                        chargePotAnims1[i - 4].currentFrame = 0;
+                    }
+                }
+                else
+                {
+                    if (chargePotAnims1[i].currentFrame == 3)
+                    {
+                        chargePotAnims1[i + 1].currentFrame = 0;
+                    }
+                }
+                if (chargePotAnims1[i].currentFrame == 6)
+                {
+                    chargePotAnims1[i].currentFrame = 6;
+                }
+            }
+            foreach(Animation shieldPanel in shieldPanels)
+            {
+                if(potionType == PotionTypes.Shield)
+                {
+                    if(shieldPanel.currentFrame < 46 || shieldPanel.currentFrame > 46)
+                    {
+                        shieldPanel.Update(gameTime);
+                    }
+                    if (potionTimer > 9700 && potionTimer < 9750)
+                    {
+                        shieldPanel.currentFrame = 47;
+                    }
+                }
+            }
+            if (potionType == PotionTypes.Shield)
+            {
+                if (shieldFrame.currentFrame < 46 || shieldFrame.currentFrame > 46)
+                {
+                    shieldFrame.Update(gameTime);
+                }
+                if(potionTimer > 9700 && potionTimer < 9750)
+                {
+                    shieldFrame.currentFrame = 47;
+                }
+            }
         }
         public void Draw(SpriteBatch spriteBatch)
         {
@@ -365,13 +504,35 @@ namespace WizardDuel
             }
             if (incapped == false)
             {
-                playerAnimations.Draw(spriteBatch, playerLocation);
+                if (potionType == PotionTypes.Charge)
+                {
+                    playerAnimations.rainbow = true;
+                    playerAnimations.Draw(spriteBatch, playerLocation);
+                    foreach (Animation potionsparks in chargePotAnims1)
+                    {
+                        potionsparks.Draw(spriteBatch, chargePotionAnimLocation, 255, 0, 0);
+                    }
+                }
+                else
+                {
+                    playerAnimations.rainbow = false;
+                    playerAnimations.Draw(spriteBatch, playerLocation);
+                }
             }
             else if (incapped == true)
             {
                 if (incapTimer >= 0 && incapTimer <= 99)
                 {
-                    playerAnimations.Draw(spriteBatch, playerLocation);
+                    if (potionType == PotionTypes.Charge)
+                    {
+                        playerAnimations.rainbow = true;
+                        playerAnimations.Draw(spriteBatch, playerLocation);
+                    }
+                    else
+                    {
+                        playerAnimations.rainbow = false;
+                        playerAnimations.Draw(spriteBatch, playerLocation);
+                    }
                 }
                 if (incapTimer >= 100 && incapTimer <= 199)
                 {
@@ -379,7 +540,17 @@ namespace WizardDuel
                 }
                 if (incapTimer >= 200 && incapTimer <= 299)
                 {
-                    playerAnimations.Draw(spriteBatch, playerLocation);
+                    if (potionType == PotionTypes.Charge)
+                    {
+                        playerAnimations.rainbow = true;
+                        playerAnimations.Draw(spriteBatch, playerLocation);
+                    }
+                    else
+                    {
+                        playerAnimations.rainbow = false;
+                        playerAnimations.Draw(spriteBatch, playerLocation);
+                    }
+                    
                 }
                 if (incapTimer >= 300 && incapTimer <= 499)
                 {
@@ -405,7 +576,7 @@ namespace WizardDuel
             }
             if (inputAction == InputAction.Charge || inputAction == InputAction.ChargeShotReady)
             {
-                spriteBatch.Draw(playerRetical, reticalLocation, null, Color.White, angle, rotationOrigin, 1f, SpriteEffects.None, 1f);
+                spriteBatch.Draw(playerRetical1, reticalLocation, null, Color.White, angle, rotationOrigin, 1f, SpriteEffects.None, 1f);
             }
             else
             {
@@ -427,7 +598,25 @@ namespace WizardDuel
             {
                 sleepEffect.Draw(spriteBatch, sleepLocation);
             }
-            spriteBatch.Draw(shotMeterTexture, new Rectangle((int)shotMeterLocation.X, (int)shotMeterLocation.Y, (int)shotMeterCounter, 2), Color.White);
+            if (potionType != PotionTypes.Fireball)
+            {
+                spriteBatch.Draw(shotMeterTexture, new Rectangle((int)shotMeterLocation.X, (int)shotMeterLocation.Y, (int)shotMeterCounter, 2), Color.White);
+            }
+            else
+            {
+                spriteBatch.Draw(shotMeterTexture, new Rectangle((int)shotMeterLocation.X, (int)shotMeterLocation.Y, (int)shotMeterCounter, 2), new Color(r, g, b));
+            }
+            foreach (Animation shieldPanel in shieldPanels)
+            {
+                if (potionType == PotionTypes.Shield)
+                {
+                    shieldPanel.Draw(spriteBatch, shieldLocation);
+                }
+            }
+            if (potionType == PotionTypes.Shield)
+            {
+                shieldFrame.Draw(spriteBatch, shieldLocation);
+            }
         }
         public void DashEffects(GameTime gameTime)
         {
@@ -792,29 +981,35 @@ namespace WizardDuel
             stunnedLocation.X = hitBox.Center.X - stunnedEffect.width / 2;
             slowLocation.X = hitBox.Center.X - slowEffect.width / 2;
             sleepLocation.X = stunnedLocation.X;
+
+            chargePotionAnimLocation.X = playerLocation.X + 32;
+            
+            shieldLocation = new Vector2(playerAnimations.drawingLocation.X + playerAnimations.width / 2 - shieldFrame.width / 2, playerAnimations.drawingLocation.Y + playerAnimations.height / 2 - shieldFrame.height / 2 + 5);
+            shieldHitbox.X = (int)playerAnimations.drawingLocation.X + (playerAnimations.width / 2) - (int)shieldHitbox.Width / 2;
+            shieldHitbox.Y = (int)playerAnimations.drawingLocation.Y + playerAnimations.height / 2 - shieldHitbox.Width / 2;
         }
         public void CalculateProjectileOriginAndDirection()
         {
             if (playerIndex == PlayerIndex.One)
             {
                 shooterMatrix = Matrix.CreateRotationZ(input.ReturnAngle()) * Matrix.CreateTranslation(reticalLocation.X, reticalLocation.Y, 0);
-                projectileOrigin = Vector2.Transform(new Vector2(0, -playerRetical.Height), shooterMatrix);//transforms the vector BASED ON the location of the new world matrix
+                projectileOrigin = Vector2.Transform(new Vector2(0, -playerRetical1.Height), shooterMatrix);//transforms the vector BASED ON the location of the new world matrix
             }
             if(playerIndex == PlayerIndex.Two)
             {
                 shooterMatrix = Matrix.CreateRotationZ(input.ReturnAngle()) * Matrix.CreateTranslation(reticalLocation.X, reticalLocation.Y, 0);
-                projectileOrigin = Vector2.Transform(new Vector2(0, playerRetical.Height), shooterMatrix);
+                projectileOrigin = Vector2.Transform(new Vector2(0, playerRetical2.Height), shooterMatrix);
             }
         }
         public void CalculateRotationOrigin()
         {
             if(playerIndex == PlayerIndex.One)
             {
-                rotationOrigin = new Vector2(playerRetical.Width / 2, playerRetical.Height); 
+                rotationOrigin = new Vector2(playerRetical1.Width / 2, playerRetical1.Height); 
             }
             else if(playerIndex == PlayerIndex.Two)
             {
-                rotationOrigin = new Vector2(playerRetical.Width / 2, 0);
+                rotationOrigin = new Vector2(playerRetical2.Width / 2, 0);
             }
         }
         public void ShotMeter()
@@ -868,26 +1063,29 @@ namespace WizardDuel
                         input.inputAction = InputAction.None;
                     }
                 }
-                if (input.inputAction == InputAction.Shoot)
+                if (potionType != PotionTypes.Fireball)
                 {
-                    if (shotMeterCounter < 10)
+                    if (input.inputAction == InputAction.Shoot)
                     {
-                        input.inputAction = InputAction.None;
+                        if (shotMeterCounter < 10)
+                        {
+                            input.inputAction = InputAction.None;
+                        }
+                        else
+                        {
+                            shotMeterCounter -= 10;
+                        }
                     }
-                    else
+                    if (input.inputAction == InputAction.ChargeShot)
                     {
-                        shotMeterCounter -= 10;
-                    }
-                }
-                if (input.inputAction == InputAction.ChargeShot)
-                {
-                    if (shotMeterCounter < 20)
-                    {
-                        input.inputAction = InputAction.None;
-                    }
-                    else
-                    {
-                        shotMeterCounter -= 20;
+                        if (shotMeterCounter < 20)
+                        {
+                            input.inputAction = InputAction.None;
+                        }
+                        else
+                        {
+                            shotMeterCounter -= 20;
+                        }
                     }
                 }
             }

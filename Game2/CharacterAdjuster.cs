@@ -14,9 +14,6 @@ namespace WizardDuel
 {
     class CharacterAdjuster
     {
-        ContentManager content;
-        GraphicsDeviceManager graphics;
-
         PlayerIndex playerIndex;
         int character;
         InputAction inputAction;
@@ -35,10 +32,8 @@ namespace WizardDuel
 
         ImpactLocations impactLocation;
 
-        public CharacterAdjuster(ContentManager content, GraphicsDeviceManager graphics)
+        public CharacterAdjuster()
         {
-            this.content = content;
-            this.graphics = graphics;
             stunned = false;
             slowed = false;
             slept = false;

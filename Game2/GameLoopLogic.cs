@@ -12,20 +12,15 @@ using Microsoft.Xna.Framework.Content;
 
 namespace WizardDuel
 {
-    class GameLoopLogic
+    class GameLoopLogic : AssetContainer
     {
         public List<Projectile> projectiles = new List<Projectile>();
         public List<Player> players = new List<Player>();
         public List<WallSegment> bricks = new List<WallSegment>();
-
-        public Texture2D impactT;
-        public Texture2D impactT2;
-        public Texture2D impactT3;
-        public Texture2D impactT4;
+        PotionSpawner potionSpawner;
 
         AIcontroller aiController;
 
-        ContentManager content;
         GraphicsDeviceManager graphics;
         Boundary boundary;
 
@@ -33,18 +28,11 @@ namespace WizardDuel
 
         public int menuPointer = 1;
 
-        Texture2D pauseScreenT;
         Animation pauseScreen;
-
-        Texture2D nonCombatTransitionT;
-        Texture2D upwardSwipeTransitionT;
-        Texture2D playerWinT;
 
         public Animation nonCombatTransition;
         public Animation upwardSwipeTransition;
         public Animation playerWin;
-
-        Texture2D endGameScreen;
 
         Rectangle restartRect;
         Rectangle controlsRect;
@@ -72,26 +60,29 @@ namespace WizardDuel
 
         bool endGame = false;
 
-        public GameLoopLogic(ContentManager content, GraphicsDeviceManager graphics, Boundary boundary, Texture2D big1, Texture2D big2, Texture2D big3, Texture2D big4)
+        List<Potions> potions = new List<Potions>();
+
+        int bigImpactAmount = 0;
+
+        int impactAmountTimer;
+
+        bool potionSwitch;
+
+        int skullShotTimer;
+
+        public GameLoopLogic(GraphicsDeviceManager graphics, Boundary boundary)
         {
             buffTiredExplode = false;
-            this.content = content;
             this.graphics = graphics;
             this.boundary = boundary;
+
             aiController = new AIcontroller(graphics);
-            pauseScreenT = content.Load<Texture2D>("full screen art/pausescreen");
             pauseScreen = new Animation(pauseScreenT, 3, 1);
-            pauseScreen.currentFrame = 0;
-
-            upwardSwipeTransitionT = content.Load<Texture2D>("transitions/upwardscreenwipetransitionin");
-            nonCombatTransitionT = content.Load<Texture2D>("transitions/tononcombatscreentransition");
-            playerWinT = content.Load<Texture2D>("full screen art/playerwin");
-            endGameScreen = content.Load<Texture2D>("sprites/endgamebackground");
-
             playerWin = new Animation(playerWinT, 8, 5);
             nonCombatTransition = new Animation(nonCombatTransitionT, 2, 5);
             upwardSwipeTransition = new Animation(upwardSwipeTransitionT, 3, 2);
 
+            pauseScreen.currentFrame = 0;
             nonCombatTransition.currentFrame = -1;
             upwardSwipeTransition.currentFrame = -1;
 
@@ -107,13 +98,25 @@ namespace WizardDuel
 
             multiChargeSpreadLoc = new Vector2();
 
-            impactT = big1;
-            impactT2 = big2;
-            impactT3 = big3;
-            impactT4 = big4;
+            potionSpawner = new PotionSpawner();
+
+            potionSwitch = false;
         }
         public void UpdateTransitions(GameTime gameTime)
         {
+            potionSpawner.Update(gameTime);
+            if(potionSpawner.potionFire.currentFrame == 49)
+            {
+                if (potionSwitch == false)
+                {
+                    potions.Add(new Potions(graphics, potionSpawner.potionChoice));
+                    potionSwitch = true;
+                }
+            }
+            if(potionSpawner.potionFire.currentFrame == 50)
+            {
+                potionSwitch = false;
+            }
             if (backFromPause == true)
             {
                 backFromPause = false;
@@ -137,7 +140,7 @@ namespace WizardDuel
             int index = 1;
             for(int i = 0; i < 14; i++)
             {
-                bricks.Add(new WallSegment(content, graphics));
+                bricks.Add(new WallSegment());
             }
             foreach(WallSegment brick in bricks)
             {
@@ -208,37 +211,78 @@ namespace WizardDuel
         }
         public void ListChecks(GameTime gameTime)
         {
-            
+            impactAmountTimer += gameTime.ElapsedGameTime.Milliseconds;
+            if(impactAmountTimer > 5000)
+            {
+                bigImpactAmount = 0;
+            }
+            skullShotTimer += gameTime.ElapsedGameTime.Milliseconds;
+            foreach (Potions potion in potions)
+            {
+                if (skullShotTimer > 300)
+                {
+                    if (potion.potionType == PotionTypes.Skull)
+                    {
+                        if (potion.player1HP == 0)
+                        {
+                            if (potion.glass.currentFrame == 53 && potion.lockSkullPotionToRail == true)
+                            {
+                                projectiles.Add(new Projectile(InputAction.Shoot, 0f, potion.leftEye, content, graphics, PlayerIndex.Two, boundary.bounds, 2, true));
+                                projectiles.Add(new Projectile(InputAction.Shoot, 0f, potion.rightEye, content, graphics, PlayerIndex.Two, boundary.bounds, 2, true));
+                                skullShotTimer = 0;
+                            }
+                        }
+                        if (potion.player2HP == 0)
+                        {
+                            if (potion.glass.currentFrame == 53 && potion.lockSkullPotionToRail == true)
+                            {
+                                projectiles.Add(new Projectile(InputAction.Shoot, 0f, potion.leftEye, content, graphics, PlayerIndex.One, boundary.bounds, 1, true));
+                                projectiles.Add(new Projectile(InputAction.Shoot, 0f, potion.rightEye, content, graphics, PlayerIndex.One, boundary.bounds, 1, true));
+                                skullShotTimer = 0;
+                            }
+                        }
+                    }
+                }
+                potion.Update(gameTime);
+                potion.GrabPlayerLocation(new Vector2(players[0].hitBox.Center.X, players[0].hitBox.Center.Y), new Vector2(players[1].hitBox.Center.X, players[1].hitBox.Center.Y));
+            }
+            PotionLogic();
             if (multiChargeSpread == true && buffTiredExplode == true)
             {
-                projectiles.Add(new Projectile(InputAction.ChargeShot, 1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.One, boundary.bounds, 2, true));
-                projectiles.Add(new Projectile(InputAction.ChargeShot, 0f, multiChargeSpreadLoc, content, graphics, PlayerIndex.One, boundary.bounds, 1, true));
-                projectiles.Add(new Projectile(InputAction.ChargeShot, -1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.One, boundary.bounds, 1, true));
-                projectiles.Add(new Projectile(InputAction.ChargeShot, 1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.Two, boundary.bounds, 1, true));
-                projectiles.Add(new Projectile(InputAction.ChargeShot, 0f, multiChargeSpreadLoc, content, graphics, PlayerIndex.Two, boundary.bounds, 2, true));
-                projectiles.Add(new Projectile(InputAction.ChargeShot, -1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.Two, boundary.bounds, 2, true));
+                projectiles.Add(new Projectile(InputAction.ChargeShot, 1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.One, boundary.bounds, 2, true, bigImpactAmount));
+                projectiles.Add(new Projectile(InputAction.ChargeShot, 0f, multiChargeSpreadLoc, content, graphics, PlayerIndex.One, boundary.bounds, 1, true, bigImpactAmount));
+                projectiles.Add(new Projectile(InputAction.ChargeShot, -1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.One, boundary.bounds, 1, true, bigImpactAmount));
+                projectiles.Add(new Projectile(InputAction.ChargeShot, 1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.Two, boundary.bounds, 1, true, bigImpactAmount));
+                projectiles.Add(new Projectile(InputAction.ChargeShot, 0f, multiChargeSpreadLoc, content, graphics, PlayerIndex.Two, boundary.bounds, 2, true, bigImpactAmount));
+                projectiles.Add(new Projectile(InputAction.ChargeShot, -1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.Two, boundary.bounds, 2, true, bigImpactAmount));
+                bigImpactAmount++;
+                impactAmountTimer = 0;
                 multiChargeSpread = false;
                 buffTiredExplode = false;
             }
             if (multiChargeSpread == true && buffBuffExplode == true)
             {
-                projectiles.Add(new Projectile(InputAction.ChargeShot, 1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.One, boundary.bounds, 1, true));
-                projectiles.Add(new Projectile(InputAction.ChargeShot, 0f, multiChargeSpreadLoc, content, graphics, PlayerIndex.One, boundary.bounds, 1, true));
-                projectiles.Add(new Projectile(InputAction.ChargeShot, -1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.One, boundary.bounds, 1, true));
-                projectiles.Add(new Projectile(InputAction.ChargeShot, 1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.Two, boundary.bounds, 1, true));
-                projectiles.Add(new Projectile(InputAction.ChargeShot, 0f, multiChargeSpreadLoc, content, graphics, PlayerIndex.Two, boundary.bounds, 1, true));
-                projectiles.Add(new Projectile(InputAction.ChargeShot, -1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.Two, boundary.bounds, 1, true));
+                projectiles.Add(new Projectile(InputAction.ChargeShot, 1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.One, boundary.bounds, 1, true, bigImpactAmount));
+                projectiles.Add(new Projectile(InputAction.ChargeShot, 0f, multiChargeSpreadLoc, content, graphics, PlayerIndex.One, boundary.bounds, 1, true, bigImpactAmount));
+                projectiles.Add(new Projectile(InputAction.ChargeShot, -1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.One, boundary.bounds, 1, true, bigImpactAmount));
+                projectiles.Add(new Projectile(InputAction.ChargeShot, 1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.Two, boundary.bounds, 1, true, bigImpactAmount));
+                projectiles.Add(new Projectile(InputAction.ChargeShot, 0f, multiChargeSpreadLoc, content, graphics, PlayerIndex.Two, boundary.bounds, 1, true, bigImpactAmount));
+                projectiles.Add(new Projectile(InputAction.ChargeShot, -1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.Two, boundary.bounds, 1, true, bigImpactAmount));
+                bigImpactAmount++;
+                impactAmountTimer = 0;
                 multiChargeSpread = false;
                 buffBuffExplode = false;
             }
             if (multiChargeSpread == true && tiredTiredExplode == true)
             {
-                projectiles.Add(new Projectile(InputAction.ChargeShot, 1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.One, boundary.bounds, 2, true));
-                projectiles.Add(new Projectile(InputAction.ChargeShot, 0f, multiChargeSpreadLoc, content, graphics, PlayerIndex.One, boundary.bounds, 2, true));
-                projectiles.Add(new Projectile(InputAction.ChargeShot, -1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.One, boundary.bounds, 2, true));
-                projectiles.Add(new Projectile(InputAction.ChargeShot, 1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.Two, boundary.bounds, 2, true));
-                projectiles.Add(new Projectile(InputAction.ChargeShot, 0f, multiChargeSpreadLoc, content, graphics, PlayerIndex.Two, boundary.bounds, 2, true));
-                projectiles.Add(new Projectile(InputAction.ChargeShot, -1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.Two, boundary.bounds, 2, true));
+                projectiles.Add(new Projectile(InputAction.ChargeShot, 1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.One, boundary.bounds, 2, true, bigImpactAmount));
+                projectiles.Add(new Projectile(InputAction.ChargeShot, 0f, multiChargeSpreadLoc, content, graphics, PlayerIndex.One, boundary.bounds, 2, true, bigImpactAmount));
+                projectiles.Add(new Projectile(InputAction.ChargeShot, -1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.One, boundary.bounds, 2, true, bigImpactAmount));
+                projectiles.Add(new Projectile(InputAction.ChargeShot, 1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.Two, boundary.bounds, 2, true, bigImpactAmount));
+                projectiles.Add(new Projectile(InputAction.ChargeShot, 0f, multiChargeSpreadLoc, content, graphics, PlayerIndex.Two, boundary.bounds, 2, true, bigImpactAmount));
+                projectiles.Add(new Projectile(InputAction.ChargeShot, -1f, multiChargeSpreadLoc, content, graphics, PlayerIndex.Two, boundary.bounds, 2, true, bigImpactAmount));
+                bigImpactAmount++;
+                impactAmountTimer = 0;
                 multiChargeSpread = false;
                 tiredTiredExplode = false;
             }
@@ -265,13 +309,20 @@ namespace WizardDuel
                     }
                     if (player.inputAction == InputAction.Shoot || player.inputAction == InputAction.ChargeShot)
                     {
-                        if (player.AI == true)
+                        if (player.potionType != PotionTypes.Charge)
                         {
-                            projectiles.Add(new Projectile(player.inputAction, aiController.angle, aiController.projectileOrigin, content, graphics, player.playerIndex, boundary.bounds, player.playerChoice));
+                            if (player.AI == true)
+                            {
+                                projectiles.Add(new Projectile(player.inputAction, aiController.angle, aiController.projectileOrigin, graphics, player.playerIndex, boundary.bounds, player.playerChoice));
+                            }
+                            else if (player.AI == false)
+                            {
+                                projectiles.Add(new Projectile(player.inputAction, player.shootingAngle, player.projectileOrigin, graphics, player.playerIndex, boundary.bounds, player.playerChoice));
+                            }
                         }
-                        else if (player.AI == false)
+                        else if(player.potionType == PotionTypes.Charge)
                         {
-                            projectiles.Add(new Projectile(player.inputAction, player.shootingAngle, player.projectileOrigin, content, graphics, player.playerIndex, boundary.bounds, player.playerChoice));
+                            projectiles.Add(new Projectile(InputAction.ChargeShot, player.shootingAngle, player.projectileOrigin, graphics, player.playerIndex, boundary.bounds, player.playerChoice));
                         }
                     }
                     if (player.inputAction == InputAction.Reflect)
@@ -306,7 +357,6 @@ namespace WizardDuel
                     foreach (Projectile projectile in projectiles)
                     {
                         projectile.Update(gameTime);
-                        
                         if (projectile.bounds.Intersects(player.reflectHitBox))
                         {
                             if (player.playerChoice == 2)
@@ -335,15 +385,25 @@ namespace WizardDuel
                     }
                     for (int i = 0; i < projectiles.Count; i++)
                     {
-                        
-                        if (projectiles[i].removalPing == true)
-                        {
-                            projectiles.RemoveAt(i--);
-                        }
-                        else if (projectiles[i].collisionLocation == CollidedWith.TopGoal || projectiles[i].collisionLocation == CollidedWith.BottomGoal)
+                        if (projectiles[i].collisionLocation == CollidedWith.TopGoal || projectiles[i].collisionLocation == CollidedWith.BottomGoal)
                         {
                             projectiles.RemoveAt(i--);
                             aiController.markCounter--;
+                            break;
+                        }
+                        else if (projectiles[i].removalPing == true)
+                        {
+                            projectiles.RemoveAt(i--);
+                            break;
+                        }
+                        else if (projectiles[i].bounds.Intersects(player.shieldHitbox))
+                        {
+                            if (player.potionType == PotionTypes.Shield)
+                            {
+                                fireballImpacts.Add(new FireballImpact(new Vector2(projectiles[i].bounds.Center.X, projectiles[i].bounds.Center.Y), projectiles[i].originalOwner, false, false, 0, false, false, true, projectiles[i].fromSkull));
+                                projectiles.RemoveAt(i--);
+                                break;
+                            }
                         }
                         else
                         {
@@ -357,40 +417,86 @@ namespace WizardDuel
                                         {
                                             if (projectiles[i].chargeShot == true && projectiles[i_].chargeShot == false)
                                             {
-                                                fireballImpacts.Add(new FireballImpact(graphics, content, new Vector2(projectiles[i_].bounds.Center.X, projectiles[i_].bounds.Center.Y), projectiles[i_].originalOwner, projectiles[i_].chargeShot, false, 0, false));
+                                                fireballImpacts.Add(new FireballImpact(new Vector2(projectiles[i_].bounds.Center.X, projectiles[i_].bounds.Center.Y), projectiles[i_].originalOwner, projectiles[i_].chargeShot, false, 0, false, projectiles[i].fromSkull));
                                                 projectiles.RemoveAt(i_--);
+                                                break;
                                             }
-                                            if (projectiles[i].chargeShot == false && projectiles[i_].chargeShot == false)
+                                            else if (projectiles[i].chargeShot == false && projectiles[i_].chargeShot == false)
                                             {
                                                 projectiles[i].removalPing = true;
-                                                fireballImpacts.Add(new FireballImpact(graphics, content, new Vector2(projectiles[i_].bounds.Center.X, projectiles[i_].bounds.Center.Y), projectiles[i_].originalOwner, projectiles[i_].chargeShot, false, 0, false));
+                                                fireballImpacts.Add(new FireballImpact(new Vector2(projectiles[i_].bounds.Center.X, projectiles[i_].bounds.Center.Y), projectiles[i_].originalOwner, projectiles[i_].chargeShot, false, 0, false, projectiles[i].fromSkull));
                                                 projectiles.RemoveAt(i_--);
+                                                break;
                                             }
-                                            if (projectiles[i].chargeShot == true && projectiles[i_].chargeShot == true && projectiles[i].originalOwner == 1 && projectiles[i_].originalOwner == 2)
+                                            else if (projectiles[i].chargeShot == true && projectiles[i_].chargeShot == true && projectiles[i].originalOwner == 1 && projectiles[i_].originalOwner == 2)
                                             {
                                                 projectiles[i_].removalPing = true;
                                                 multiChargeSpreadLoc = projectiles[i].location;
-                                                fireballImpacts.Add(new FireballImpact(graphics, content, new Vector2(projectiles[i_].bounds.Center.X, projectiles[i_].bounds.Center.Y), projectiles[i_].originalOwner, projectiles[i_].chargeShot, false, 0, true, impactT, impactT2, impactT3, impactT4));
+                                                fireballImpacts.Add(new FireballImpact(new Vector2(projectiles[i_].bounds.Center.X, projectiles[i_].bounds.Center.Y), projectiles[i_].originalOwner, projectiles[i_].chargeShot, false, 0, true, projectiles[i].fromSkull));
                                                 buffTiredExplode = true;
                                                 projectiles.RemoveAt(i--);
+                                                break;
                                             }
+
                                             else if (projectiles[i].chargeShot == true && projectiles[i_].chargeShot == true && projectiles[i].originalOwner == 1 && projectiles[i_].originalOwner == 1)
                                             {
                                                 projectiles[i_].removalPing = true;
                                                 multiChargeSpreadLoc = projectiles[i].location;
-                                                fireballImpacts.Add(new FireballImpact(graphics, content, new Vector2(projectiles[i_].bounds.Center.X, projectiles[i_].bounds.Center.Y), projectiles[i_].originalOwner, projectiles[i_].chargeShot, false, 0, true, impactT, impactT2, impactT3, impactT4));
+                                                fireballImpacts.Add(new FireballImpact(new Vector2(projectiles[i].bounds.Center.X, projectiles[i].bounds.Center.Y), projectiles[i].originalOwner, projectiles[i].chargeShot, false, 0, true, projectiles[i].fromSkull));
+                                                
                                                 buffBuffExplode = true;
                                                 projectiles.RemoveAt(i--);
+                                                break;
                                             }
                                             else if (projectiles[i].chargeShot == true && projectiles[i_].chargeShot == true && projectiles[i].originalOwner == 2 && projectiles[i_].originalOwner == 2)
                                             {
                                                 projectiles[i_].removalPing = true;
                                                 multiChargeSpreadLoc = projectiles[i].location;
-                                                fireballImpacts.Add(new FireballImpact(graphics, content, new Vector2(projectiles[i_].bounds.Center.X, projectiles[i_].bounds.Center.Y), projectiles[i_].originalOwner, projectiles[i_].chargeShot, false, 0, true, impactT, impactT2, impactT3, impactT4));
+                                                fireballImpacts.Add(new FireballImpact(new Vector2(projectiles[i].bounds.Center.X, projectiles[i].bounds.Center.Y), projectiles[i].originalOwner, projectiles[i].chargeShot, false, 0, true, projectiles[i].fromSkull));
                                                 tiredTiredExplode = true;
                                                 projectiles.RemoveAt(i--);
+                                                break;
                                             }
                                         }
+                                    }
+                                }
+                            }
+                            foreach (Potions potion in potions)
+                            {
+
+                                if (projectiles[i].bounds.Intersects(potion.hitBox) && potion.activated == false && projectiles[i].fromSkull == false)
+                                {
+                                    potion.hit = true;
+                                    if (projectiles[i].playerIndex == PlayerIndex.One)
+                                    {
+                                        potion.player1HP--;
+                                    }
+                                    if (projectiles[i].playerIndex == PlayerIndex.Two)
+                                    {
+                                        potion.player2HP--;
+                                    }
+
+                                    fireballImpacts.Add(new FireballImpact(new Vector2(projectiles[i].bounds.Center.X, projectiles[i].bounds.Top), projectiles[i].originalOwner, projectiles[i].chargeShot, true, (float)projectiles[i].angle, false, projectiles[i].fromSkull));
+                                    projectiles.RemoveAt(i--);
+                                    break;
+                                }
+                                else if (projectiles[i].bounds.Intersects(potion.wallPotionCollision))
+                                {
+                                    if (projectiles[i].playerIndex != potion.playerIndex)
+                                    {
+                                        if (projectiles[i].playerIndex == PlayerIndex.One)
+                                        {
+                                            projectiles[i].playerIndex = PlayerIndex.Two;
+                                        }
+                                        else if (projectiles[i].playerIndex == PlayerIndex.Two)
+                                        {
+                                            projectiles[i].playerIndex = PlayerIndex.One;
+                                        }
+                                        projectiles[i].tempNoCollison = false;
+                                        projectiles[i].direction.Y = -projectiles[i].direction.Y;
+                                        projectiles[i].bounceLocation = projectiles[i].location;
+                                        projectiles[i].angle = -projectiles[i].angle + Math.PI;
+                                        fireballImpacts.Add(new FireballImpact(new Vector2(projectiles[i].bounds.Center.X, projectiles[i].bounds.Center.Y), projectiles[i].originalOwner, false, false, 0, false, false, true,projectiles[i].fromSkull));
                                     }
                                 }
                             }
@@ -446,7 +552,7 @@ namespace WizardDuel
                                         player.incapTimer = 0;
                                     }
                                 }
-                                fireballImpacts.Add(new FireballImpact(graphics, content, new Vector2(projectiles[i].bounds.Center.X, projectiles[i].bounds.Top), projectiles[i].originalOwner, projectiles[i].chargeShot, true, (float)projectiles[i].angle, false));
+                                fireballImpacts.Add(new FireballImpact(new Vector2(projectiles[i].bounds.Center.X, projectiles[i].bounds.Top), projectiles[i].originalOwner, projectiles[i].chargeShot, true, (float)projectiles[i].angle, false, projectiles[i].fromSkull));
                                 projectiles.RemoveAt(i--);
                                 aiController.markCounter--;
                             }
@@ -466,14 +572,18 @@ namespace WizardDuel
                                 {
                                     if (projectiles[i].location.Y > 300)
                                     {
-                                        fireballImpacts.Add(new FireballImpact(graphics, content, new Vector2(projectiles[i].bounds.Center.X, projectiles[i].bounds.Bottom), projectiles[i].originalOwner, projectiles[i].chargeShot, false, 0, false));
+                                        fireballImpacts.Add(new FireballImpact(new Vector2(projectiles[i].bounds.Center.X, projectiles[i].bounds.Bottom), projectiles[i].originalOwner, projectiles[i].chargeShot, false, 0, false, false, false,projectiles[i].fromSkull));
                                     }
                                     if (projectiles[i].location.Y < 300)
                                     {
-                                        fireballImpacts.Add(new FireballImpact(graphics, content, new Vector2(projectiles[i].bounds.Center.X, projectiles[i].bounds.Top), projectiles[i].originalOwner, projectiles[i].chargeShot, false, 0, false));
+                                        fireballImpacts.Add(new FireballImpact(new Vector2(projectiles[i].bounds.Center.X, projectiles[i].bounds.Top), projectiles[i].originalOwner, projectiles[i].chargeShot, false, 0, false, false, false, projectiles[i].fromSkull));
+                                    }
+                                    
+                                    if (projectiles[i].fromSkull == false)
+                                    {
+                                        brick.health--;
                                     }
                                     projectiles.RemoveAt(i--);
-                                    brick.health--;
                                     if (brick.timer > 300)
                                     {
                                         brick.timer = 0;
@@ -515,10 +625,21 @@ namespace WizardDuel
                         {
                             if (fireballImpacts[i].bulletType == 1 || fireballImpacts[i].bulletType == 2)
                             {
-                                if (fireballImpacts[i].impact.currentFrame == 8 && fireballImpacts[i].bulletType == 1 || fireballImpacts[i].impact.currentFrame == 12 && fireballImpacts[i].onPlayer == true && fireballImpacts[i].bulletType == 2 || fireballImpacts[i].chargeShot == false && fireballImpacts[i].impact.currentFrame == 7 || fireballImpacts[i].bulletType == 2 && fireballImpacts[i].sleepTimer > 5000)
+                                if (fireballImpacts[i].impact.currentFrame == 8 && fireballImpacts[i].bulletType == 1 && fireballImpacts[i].doubleCharge == false || fireballImpacts[i].impact.currentFrame == 12 && fireballImpacts[i].onPlayer == true && fireballImpacts[i].bulletType == 2 || fireballImpacts[i].chargeShot == false && fireballImpacts[i].impact.currentFrame == 7 || fireballImpacts[i].bulletType == 2 && fireballImpacts[i].sleepTimer > 5000 || fireballImpacts[i].rainbowWall == true && fireballImpacts[i].impact.currentFrame > 3 || fireballImpacts[i].fromSkull && fireballImpacts[i].impact.currentFrame > 3)
                                 {
                                     fireballImpacts.RemoveAt(i--);
                                 }
+                            }
+                        }
+                        else if (fireballImpacts[i].chargeShot == false)
+                        {
+                            if(fireballImpacts[i].rainbowWall == true && fireballImpacts[i].impact.currentFrame > 3)
+                            {
+                                fireballImpacts.RemoveAt(i--);
+                            }
+                            else if (fireballImpacts[i].rainbowWall == false && fireballImpacts[i].impact.currentFrame > 6)
+                            {
+                                fireballImpacts.RemoveAt(i--);
                             }
                         }
                     }
@@ -590,6 +711,47 @@ namespace WizardDuel
                 }
             }
         }
+        public void PotionLogic()
+        {
+            for(int i = 0; i < potions.Count; i++)
+            {
+                foreach (Player player in players)
+                {
+                    if (potions[i].potionType == PotionTypes.Fireball && potions[i].glass.currentFrame > 31 && potions[i].potionParticles.Count == 0)
+                    {
+                        if (player.playerIndex == potions[i].PassIndex())
+                        {
+                            player.potionType = potions[i].PassType();
+                            potions.RemoveAt(i--);
+                            break;
+                        }
+                    }
+                    else if (potions[i].potionType == PotionTypes.Charge && potions[i].glass.currentFrame > 58 && potions[i].potionParticles.Count == 0)
+                    {
+                        if (player.playerIndex == potions[i].PassIndex())
+                        {
+                            player.potionType = potions[i].PassType();
+                            potions.RemoveAt(i--);
+                            break;
+                        }
+                    }
+                    else if (potions[i].potionType == PotionTypes.Shield && potions[i].glass.currentFrame > 29 && potions[i].potionParticles.Count == 0)
+                    {
+                        if (player.playerIndex == potions[i].PassIndex())
+                        {
+                            player.potionType = potions[i].PassType();
+                            potions.RemoveAt(i--);
+                            break;
+                        }
+                    }
+                    else if(potions[i].potionType == PotionTypes.Wall && potions[i].potionWallBottom.currentFrame > 15)
+                    {
+                        potions.RemoveAt(i--);
+                        break;
+                    }
+                }
+            }
+        }
         public void TimeUpConditions(GameTime gameTime)
         {
             playerWin.Update(gameTime);
@@ -631,14 +793,20 @@ namespace WizardDuel
         }
         public void DrawLists(SpriteBatch spriteBatch)
         {
-            
+            foreach (Potions potion in potions)
+            {
+                potion.Draw(spriteBatch);
+            }
             foreach (Player player in players)
             {
                 player.Draw(spriteBatch);
             }
             foreach (Projectile projectile in projectiles)
             {
-                projectile.Draw(spriteBatch);
+                if (projectile.removalPing == false)
+                {
+                    projectile.Draw(spriteBatch);
+                }
             }
             foreach(FireballImpact fireballImpact in fireballImpacts)
             {
@@ -677,6 +845,7 @@ namespace WizardDuel
             {
                 brick.Draw(spriteBatch);
             }
+            potionSpawner.Draw(spriteBatch);
         }
     }
 }

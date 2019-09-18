@@ -14,10 +14,9 @@ namespace WizardDuel
 {
     public enum CollidedWith { Left, Right, None, Top, Bottom, BottomGoal, TopGoal}
     public enum Direction { UpLeft, UpRight, DownLeft, DownRight, None}
-    class Projectile
+    class Projectile : AssetContainer
     {
         GraphicsDeviceManager graphics;
-        ContentManager content;
 
         public int projectileTime;
 
@@ -29,7 +28,6 @@ namespace WizardDuel
         public Rectangle bounds;
         public Vector2 direction;
         public Animation fireball { get; set; }
-        Texture2D fireballT;
 
         public CollidedWith collisionLocation;
         public Direction projectileDirection { get; set; }
@@ -51,13 +49,10 @@ namespace WizardDuel
         public int reverseTimer;
 
         Vector2 leftOrRight;
-        Texture2D wallBounceT;
         Animation wallBounce;
 
         public int originalOwner;
 
-        Texture2D fireballTrail1T;
-        Texture2D fireballTrail2T;
         List<Animation> trails = new List<Animation>();
 
         List<Vector2> trailLocations = new List<Vector2>();
@@ -72,9 +67,12 @@ namespace WizardDuel
 
         int noCollisionTimer;
 
-        public Projectile(InputAction inputAction, float angle, Vector2 location, ContentManager content, GraphicsDeviceManager graphics, PlayerIndex playerIndex, Rectangle boundary, int playerChoice)
+        int fromImpact;
+
+        public bool fromSkull = false;
+
+        public Projectile(InputAction inputAction, float angle, Vector2 location, GraphicsDeviceManager graphics, PlayerIndex playerIndex, Rectangle boundary, int playerChoice)
         {
-            this.content = content;
             this.graphics = graphics;
             this.playerChoice = playerChoice;
             originalOwner = playerChoice;
@@ -85,12 +83,9 @@ namespace WizardDuel
                 chargeShot = false;
                 originalSpeed = 2;
                 speed = 2;
-                fireballT = content.Load<Texture2D>("sprites/player effects/mainfireball");
-                fireballTrail1T = content.Load<Texture2D>("sprites/player effects/fireballtail1");
-                fireballTrail2T = content.Load<Texture2D>("sprites/player effects/fireballtail2");
                 fireball = new Animation(fireballT, 2, 3, angle);
-                trails.Add(new Animation(fireballTrail1T, 2, 3, angle));
-                trails.Add(new Animation(fireballTrail2T, 2, 3, angle));
+                trails.Add(new Animation(fireballTrailT1, 2, 3, angle));
+                trails.Add(new Animation(fireballTrailT1, 2, 3, angle));
                 fireball.currentFrame = 2;
                 trails[0].currentFrame = 1;
                 trails[1].currentFrame = 0;
@@ -101,19 +96,16 @@ namespace WizardDuel
                 chargeShot = true;
                 if(originalOwner == 1)
                 {
-                    fireballT = content.Load<Texture2D>("sprites/player effects/buffchargeshot");
-                    fireball = new Animation(fireballT, 2, 3, angle);
+                    fireball = new Animation(buffWizardChargeShotT, 2, 3, angle);
                 }
                 if(originalOwner == 2)
                 {
-                    fireballT = content.Load<Texture2D>("sprites/player effects/tiredchargeshot");
-                    fireball = new Animation(fireballT, 2, 3, angle);
+                    fireball = new Animation(tiredWizardChargeShotT, 2, 3, angle);
                 }
                 originalSpeed = 4;
                 speed = 4;
             }
-
-            wallBounceT = content.Load<Texture2D>("sprites/border items/wallbounce");
+            
             wallBounce = new Animation(wallBounceT, 2, 6);
             wallBounce.currentFrame = 10;
 
@@ -160,8 +152,9 @@ namespace WizardDuel
             removalPing = false;
             tempNoCollison = false;
         }
-        public Projectile(InputAction inputAction, float angle, Vector2 location, ContentManager content, GraphicsDeviceManager graphics, PlayerIndex playerIndex, Rectangle boundary, int playerChoice, bool tempNoCollision)
+        public Projectile(InputAction inputAction, float angle, Vector2 location, ContentManager content, GraphicsDeviceManager graphics, PlayerIndex playerIndex, Rectangle boundary, int playerChoice, bool tempNoCollision, int fromImpact)
         {
+            this.fromImpact += fromImpact;
             this.content = content;
             this.graphics = graphics;
             this.playerChoice = playerChoice;
@@ -173,12 +166,9 @@ namespace WizardDuel
                 chargeShot = false;
                 originalSpeed = 2;
                 speed = 2;
-                fireballT = content.Load<Texture2D>("sprites/player effects/mainfireball");
-                fireballTrail1T = content.Load<Texture2D>("sprites/player effects/fireballtail1");
-                fireballTrail2T = content.Load<Texture2D>("sprites/player effects/fireballtail2");
                 fireball = new Animation(fireballT, 2, 3, angle);
-                trails.Add(new Animation(fireballTrail1T, 2, 3, angle));
-                trails.Add(new Animation(fireballTrail2T, 2, 3, angle));
+                trails.Add(new Animation(fireballTrailT1, 2, 3, angle));
+                trails.Add(new Animation(fireballTrailT1, 2, 3, angle));
                 fireball.currentFrame = 2;
                 trails[0].currentFrame = 1;
                 trails[1].currentFrame = 0;
@@ -189,19 +179,16 @@ namespace WizardDuel
                 chargeShot = true;
                 if (originalOwner == 1)
                 {
-                    fireballT = content.Load<Texture2D>("sprites/player effects/buffchargeshot");
-                    fireball = new Animation(fireballT, 2, 3, angle);
+                    fireball = new Animation(buffWizardChargeShotT, 2, 3, angle);
                 }
                 if (originalOwner == 2)
                 {
-                    fireballT = content.Load<Texture2D>("sprites/player effects/tiredchargeshot");
-                    fireball = new Animation(fireballT, 2, 3, angle);
+                    fireball = new Animation(tiredWizardChargeShotT, 2, 3, angle);
                 }
                 originalSpeed = 4;
                 speed = 4;
             }
-
-            wallBounceT = content.Load<Texture2D>("sprites/border items/wallbounce");
+            
             wallBounce = new Animation(wallBounceT, 2, 6);
             wallBounce.currentFrame = 10;
 
@@ -238,6 +225,60 @@ namespace WizardDuel
             removalPing = false;
             this.tempNoCollison = tempNoCollision;
         }
+        public Projectile(InputAction inputAction, float angle, Vector2 location, ContentManager content, GraphicsDeviceManager graphics, PlayerIndex playerIndex, Rectangle boundary, int playerChoice, bool fromSkull)
+        {
+            this.content = content;
+            this.graphics = graphics;
+            this.playerChoice = playerChoice;
+            originalOwner = playerChoice;
+            collisionLocation = CollidedWith.None;
+            this.inputAction = inputAction;
+            this.fromSkull = fromSkull;
+            if (this.inputAction == InputAction.Shoot)
+            {
+                chargeShot = false;
+                originalSpeed = 4;
+                speed = 4;
+                fireball = new Animation(skullBulletT, 1, 1, angle);
+                fireball.currentFrame = 1;
+
+            }
+
+            wallBounce = new Animation(wallBounceT, 2, 6);
+            wallBounce.currentFrame = 10;
+
+            reversing = false;
+            accelerating = false;
+
+            this.location = new Vector2(location.X, location.Y);
+            this.angle = angle;
+            this.playerIndex = playerIndex;
+
+            if (location.X + fireball.width > boundary.Right)
+            {
+                this.location.X = boundary.Right - fireball.width;
+            }
+            else if (location.X < boundary.Left)
+            {
+                this.location.X = boundary.Left;
+            }
+            bounds = new Rectangle((int)this.location.X, (int)this.location.Y, (int)fireball.width, (int)fireball.height);
+            this.boundary = boundary;
+
+            if (playerIndex == PlayerIndex.One)
+            {
+                direction = new Vector2((float)Math.Cos(angle + (Math.PI / -2f)), (float)Math.Sin(angle + (Math.PI / -2f)));
+            }
+            else if (playerIndex == PlayerIndex.Two)
+            {
+                direction = new Vector2((float)Math.Cos(angle + (Math.PI / 2)), (float)Math.Sin(angle + (Math.PI / 2)));
+            }
+            direction.Normalize();
+            recentlyReflected = 0;
+
+            aiMark = false;
+            removalPing = false;
+        }
         public void Draw(SpriteBatch spriteBatch)
         {
             fireball.DrawProjectile(spriteBatch, location, bounds);
@@ -249,6 +290,18 @@ namespace WizardDuel
         }
         public void Update(GameTime gameTime)
         {
+            if(tempNoCollison == true)
+            {
+                if (fromImpact < 3)
+                {
+                    noCollisionTimer += gameTime.ElapsedGameTime.Milliseconds;
+                }
+                if(noCollisionTimer > 500)
+                {
+                    tempNoCollison = false;
+                    noCollisionTimer = 0;
+                }
+            }
             foreach(Animation trail in trails)
             {
                 trail.Update(gameTime, (float)angle);
@@ -262,6 +315,15 @@ namespace WizardDuel
             SleepyReflect();
             WallBounce(gameTime);
             ProjectileAnimations();
+
+            if(accelerating == true || reversing == true)
+            {
+                tempNoCollison = true;
+            }
+            if(fromSkull == true)
+            {
+                fireball.currentFrame = 0;
+            }
         }
         public void UpdateLocation()
         {
@@ -278,31 +340,27 @@ namespace WizardDuel
         }
         public void SleepyReflect()
         {
-            if (playerChoice == 2)
+            if (reversing == true && speed > .1f)
             {
-
-                if (reversing == true && speed > .1f)
-                {
-                    speed -= .15f;
-                }
+                speed -= .15f;
+            }
                 
-                if (speed < 0.1f)
-                {
-                    reversing = false;
-                    accelerating = true;
-                    direction.Y = -direction.Y;
-                    bounceLocation = location;
-                    angle = -angle + Math.PI;
-                }
-                if (speed < originalSpeed && accelerating == true)
-                {
-                    speed += .15f;
-                    reverseTimer = 0;
-                }
-                if(speed == originalSpeed)
-                {
-                    accelerating = false;
-                }
+            if (speed < 0.1f)
+            {
+                reversing = false;
+                accelerating = true;
+                direction.Y = -direction.Y;
+                bounceLocation = location;
+                angle = -angle + Math.PI;
+            }
+            if (speed < originalSpeed && accelerating == true)
+            {
+                speed += .15f;
+                reverseTimer = 0;
+            }
+            if(speed == originalSpeed)
+            {
+                accelerating = false;
             }
         }
         public void CollisionSwitch()

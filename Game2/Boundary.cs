@@ -12,15 +12,12 @@ using Microsoft.Xna.Framework.Content;
 
 namespace WizardDuel
 {
-    class Boundary
+    class Boundary : AssetContainer
     {
         GraphicsDeviceManager graphics;
-        ContentManager content;
-
-        Texture2D border;
+        
         Vector2 borderLocation;
         public Rectangle bounds { get; set; }
-        Texture2D pillarT;
 
         Animation pillarA1;
         Animation pillarA2;
@@ -43,21 +40,15 @@ namespace WizardDuel
 
         List<Projectile> projLocs = new List<Projectile>();
 
-        public Boundary(ContentManager content, GraphicsDeviceManager graphics)
+        public Boundary(GraphicsDeviceManager graphics)
         {
-            this.content = content;
             this.graphics = graphics;
-        }
-        public void Loadcontent()
-        {
-            border = content.Load<Texture2D>("sprites/fireball");
-            pillarT = content.Load<Texture2D>("sprites/border items/pillar");
             pillarA1 = new Animation(pillarT, 2, 3);
             pillarA2 = new Animation(pillarT, 2, 3);
             pillarA3 = new Animation(pillarT, 2, 3);
             pillarA4 = new Animation(pillarT, 2, 3);
 
-            pillar1 = new Vector2(0,0);
+            pillar1 = new Vector2(0, 0);
             pillar2 = new Vector2(graphics.PreferredBackBufferWidth - pillarA1.width, 0);
             pillar3 = new Vector2(0, graphics.PreferredBackBufferHeight - pillarA1.height);
             pillar4 = new Vector2(graphics.PreferredBackBufferWidth - pillarA1.width, graphics.PreferredBackBufferHeight - pillarA1.height);
@@ -72,6 +63,10 @@ namespace WizardDuel
             pillarA3.currentFrame = 0;
             pillarA4.currentFrame = 0;
             SetRenderTargets();
+        }
+        public void Loadcontent()
+        {
+            
         }
         public void UnloadContent()
         {
